@@ -53,12 +53,16 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const getTatuagensForWeek = (date: Date) => {
     const currentDate = new Date(date);
     const firstDay = new Date(currentDate);
+    firstDay.setHours(0, 0, 0, 0);
     firstDay.setDate(currentDate.getDate() - currentDate.getDay());
+    
     const lastDay = new Date(firstDay);
     lastDay.setDate(firstDay.getDate() + 6);
+    lastDay.setHours(23, 59, 59, 999);
 
     return tatuagens.filter(t => {
-      const tatuagemDate = new Date(t.data);
+      const [year, month, day] = t.data.split('-').map(Number);
+      const tatuagemDate = new Date(year, month - 1, day);
       return tatuagemDate >= firstDay && tatuagemDate <= lastDay && t.status === 'agendado';
     });
   };
@@ -67,8 +71,8 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const year = date.getFullYear();
     const month = date.getMonth();
     return tatuagens.filter(t => {
-      const tatuagemDate = new Date(t.data);
-      return tatuagemDate.getFullYear() === year && tatuagemDate.getMonth() === month && t.status === 'agendado';
+      const [tatuagemYear, tatuagemMonth] = t.data.split('-').map(Number);
+      return tatuagemYear === year && (tatuagemMonth - 1) === month && t.status === 'agendado';
     });
   };
 

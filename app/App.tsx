@@ -1,13 +1,21 @@
+import 'react-native-get-random-values';
 import React from 'react';
-import { StatusBar } from 'expo-status-bar';
+import { registerRootComponent } from 'expo';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AgendaProvider } from './src/contexts/AgendaContext';
 import { Navigation } from './src/Navigation';
+import { StatusBar } from 'expo-status-bar';
+import { Colors } from './src/theme/colors';
 
-export default function App() {
+function App() {
   return (
-    <AgendaProvider>
-      <Navigation />
-      <StatusBar style="light" />
-    </AgendaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AgendaProvider>
+        <Navigation />
+        <StatusBar style="light" backgroundColor={Colors.background} />
+      </AgendaProvider>
+    </GestureHandlerRootView>
   );
 }
+
+registerRootComponent(App);
