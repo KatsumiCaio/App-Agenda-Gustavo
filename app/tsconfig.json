@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "lib": ["es2015", "dom"],
+    "target": "es2015",
+    "jsx": "react-jsx",
+    "noImplicitAny": false,
+    "allowSyntheticDefaultImports": true,
+    "module": "esnext"
+  }
+}
