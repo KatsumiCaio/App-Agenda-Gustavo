@@ -1,82 +1,65 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AgendaScreen } from './screens/AgendaScreen';
 import { AddTatuagemScreen } from './screens/AddTatuagemScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
+import MainScreen from './screens/MainScreen';
+import CadastroClienteScreen from './screens/CadastroClienteScreen';
+import HistoricoTrabalhosScreen from './screens/HistoricoTrabalhosScreen';
 import { Colors } from './theme/colors';
 
-const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
 export const Navigation: React.FC = () => {
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          headerShown: true,
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName;
-
-            if (route.name === 'Agenda') {
-              iconName = focused ? 'calendar-check' : 'calendar-outline';
-            } else if (route.name === 'AddTatuagem') {
-              iconName = focused ? 'add-circle' : 'add-circle-outline';
-            } else if (route.name === 'Settings') {
-              iconName = focused ? 'chart-box' : 'chart-box-outline';
-            }
-
-            return <MaterialCommunityIcons name={iconName as any} size={size} color={color} />;
-          },
-          tabBarActiveTintColor: Colors.primary,
-          tabBarInactiveTintColor: Colors.textMuted,
-          tabBarStyle: {
-            backgroundColor: Colors.surface,
-            borderTopColor: Colors.border,
-            borderTopWidth: 1,
-            paddingBottom: 8,
-            paddingTop: 8,
-            height: 60,
-          },
+      <Stack.Navigator
+        initialRouteName="Main"
+        screenOptions={{
           headerStyle: {
             backgroundColor: Colors.background,
-            borderBottomWidth: 1,
-            borderBottomColor: Colors.border,
           },
           headerTintColor: Colors.textLight,
           headerTitleStyle: {
-            fontWeight: '700',
-            fontSize: 18,
-            color: Colors.textLight,
+            fontWeight: 'bold',
           },
-          headerBackTitleVisible: false,
-        })}
+          contentStyle: {
+            backgroundColor: Colors.background,
+          },
+        }}
       >
-        <Tab.Screen
+        <Stack.Screen
+          name="Main"
+          component={MainScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name="Agenda"
           component={AgendaScreen}
-          options={{
-            title: '📅 Minha Agenda',
-            tabBarLabel: 'Agenda',
-          }}
+          options={{ title: '📅 Minha Agenda' }}
         />
-        <Tab.Screen
+        <Stack.Screen
           name="AddTatuagem"
           component={AddTatuagemScreen}
-          options={{
-            title: '➕ Novo Agendamento',
-            tabBarLabel: 'Agendar',
-          }}
+          options={{ title: '➕ Novo Agendamento' }}
         />
-        <Tab.Screen
+        <Stack.Screen
+          name="CadastroCliente"
+          component={CadastroClienteScreen}
+          options={{ title: 'Cadastro de Cliente' }}
+        />
+        <Stack.Screen
+          name="HistoricoTrabalhos"
+          component={HistoricoTrabalhosScreen}
+          options={{ title: 'Histórico de Trabalhos' }}
+        />
+        <Stack.Screen
           name="Settings"
           component={SettingsScreen}
-          options={{
-            title: '📊 Estatísticas',
-            tabBarLabel: 'Mais',
-          }}
+          options={{ title: '📊 Estatísticas' }}
         />
-      </Tab.Navigator>
+      </Stack.Navigator>
     </NavigationContainer>
   );
 };
