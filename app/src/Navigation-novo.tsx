@@ -16,17 +16,19 @@ export const Navigation: React.FC = () => {
         screenOptions={({ route }) => ({
           headerShown: true,
           tabBarIcon: ({ focused, color, size }) => {
-            let iconName;
+            let iconName: string = 'help-circle';
 
             if (route.name === 'Agenda') {
               iconName = focused ? 'calendar-check' : 'calendar-outline';
             } else if (route.name === 'AddTatuagem') {
-              iconName = focused ? 'add-circle' : 'add-circle-outline';
+              iconName = focused ? 'plus-circle' : 'plus-circle-outline';
             } else if (route.name === 'Settings') {
               iconName = focused ? 'chart-box' : 'chart-box-outline';
             }
 
-            return <MaterialCommunityIcons name={iconName as any} size={size} color={color} />;
+            return (
+              <MaterialCommunityIcons name={iconName as any} size={size} color={color} />
+            );
           },
           tabBarActiveTintColor: Colors.primary,
           tabBarInactiveTintColor: Colors.textMuted,

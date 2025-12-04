@@ -5,12 +5,16 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
-    "lib": ["es2015", "dom"],
+    "moduleResolution": "bundler",
+    "lib": [
+      "es2015",
+      "dom"
+    ],
     "target": "es2015",
     "jsx": "react-jsx",
     "noImplicitAny": false,
     "allowSyntheticDefaultImports": true,
     "module": "esnext"
-  }
+  },
+  "extends": "expo/tsconfig.base"
 }

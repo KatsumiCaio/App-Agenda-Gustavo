@@ -3,20 +3,23 @@
     "name": "Agenda Tatuador",
     "slug": "agenda-tatuador",
     "version": "1.0.0",
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "enabled": false,
+      "checkAutomatically": "never"
+    },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
-      "supportsTabletMode": true
+      "supportsTabletMode": true,
+      "bundleIdentifier": "com.agendatatuador.app"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+      "package": "com.agendatatuador.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": []
   }
 }
