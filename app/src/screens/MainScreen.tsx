@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -60,6 +60,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-around',
+    ...Platform.select({
+      web: {
+        width: '100%',
+        maxWidth: 600,
+        alignSelf: 'center',
+      }
+    })
   },
   card: {
     backgroundColor: Colors.surface,

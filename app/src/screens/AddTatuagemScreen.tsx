@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, SafeAreaView, Modal, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, SafeAreaView, Modal, FlatList, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAgenda } from '../contexts/AgendaContext';
 import { DateHelper } from '../utils/dateHelper';
-import { maskPhoneNumber } from '../utils/formatHelper';
+import { format } from 'date-fns';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Colors, Shadows } from '../theme/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Cliente } from '../types';
@@ -20,24 +21,40 @@ export const AddTatuagemScreen: React.FC = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   
   const [descricao, setDescricao] = useState('');
-  const [data, setData] = useState(DateHelper.getTodayString());
+  const [date, setDate] = useState(new Date());
   const [horario, setHorario] = useState('10:00');
   const [local, setLocal] = useState('');
   const [valor, setValor] = useState('');
   const [observacoes, setObservacoes] = useState('');
 
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
+  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    const currentDate = selectedDate || date;
+    setShowDatePicker(Platform.OS === 'ios');
+    setDate(currentDate);
+  };
+
+  const onTimeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    const currentDate = selectedDate || date;
+    setShowTimePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setHorario(format(currentDate, 'HH:mm'));
+    }
+  };
+
   const handleAddTatuagem = async () => {
-    if (!selectedCliente || !descricao.trim() || !data || !horario || !valor) {
+    if (!selectedCliente || !descricao.trim() || !date || !horario || !valor) {
       Alert.alert('❌ Erro', 'Preencha todos os campos obrigatórios, incluindo a seleção do cliente.');
       return;
     }
 
     try {
       await addTatuagem({
-        cliente: selectedCliente.nome, // Salva o nome do cliente na tatuagem
-        // clienteId: selectedCliente.id, // Futuramente, podemos salvar o ID
+        cliente: selectedCliente.nome,
         descricao: descricao.trim(),
-        data,
+        data: format(date, 'yyyy-MM-dd'),
         horario,
         local: local.trim() || 'Não especificado',
         valor: parseFloat(valor),
@@ -52,7 +69,7 @@ export const AddTatuagemScreen: React.FC = () => {
           onPress: () => {
             setSelectedCliente(null);
             setDescricao('');
-            setData(DateHelper.getTodayString());
+            setDate(new Date());
             setHorario('10:00');
             setLocal('');
             setValor('');
@@ -99,6 +116,28 @@ export const AddTatuagemScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+
+      {showDatePicker && (
+        <DateTimePicker
+          testID="datePicker"
+          value={date}
+          mode="date"
+          is24Hour={true}
+          display="default"
+          onChange={onDateChange}
+        />
+      )}
+
+      {showTimePicker && (
+        <DateTimePicker
+          testID="timePicker"
+          value={date}
+          mode="time"
+          is24Hour={true}
+          display="default"
+          onChange={onTimeChange}
+        />
+      )}
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
@@ -171,30 +210,22 @@ export const AddTatuagemScreen: React.FC = () => {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Data *</Text>
-            <View style={styles.inputContainer}>
+            <TouchableOpacity style={styles.inputContainer} onPress={() => setShowDatePicker(true)}>
               <MaterialCommunityIcons name="calendar" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="YYYY-MM-DD"
-                value={data}
-                onChangeText={setData}
-                placeholderTextColor={Colors.textMuted}
-              />
-            </View>
+              <Text style={styles.input}>
+                {format(date, 'dd/MM/yyyy')}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Horário *</Text>
-            <View style={styles.inputContainer}>
+            <TouchableOpacity style={styles.inputContainer} onPress={() => setShowTimePicker(true)}>
               <MaterialCommunityIcons name="clock-outline" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="HH:MM"
-                value={horario}
-                onChangeText={setHorario}
-                placeholderTextColor={Colors.textMuted}
-              />
-            </View>
+              <Text style={styles.input}>
+                {horario}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.inputGroup}>

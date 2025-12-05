@@ -11,6 +11,7 @@ interface AgendaContextType {
   deleteTatuagem: (id: string) => Promise<void>;
   loadTatuagens: () => Promise<void>;
   addCliente: (cliente: Omit<Cliente, 'id'>) => Promise<void>;
+  clearAllData: () => Promise<void>;
   getTatuagensForDate: (date: Date) => Tatuagem[];
   getTatuagensForWeek: (date: Date) => Tatuagem[];
   getTatuagensForMonth: (date: Date) => Tatuagem[];
@@ -23,8 +24,11 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [clientes, setClientes] = useState<Cliente[]>([]);
 
   useEffect(() => {
-    // Carrega os dados iniciais na montagem do provider
-    loadAllData();
+    const initialize = async () => {
+      await StorageService.clearAll();
+      await loadAllData();
+    };
+    initialize();
   }, []);
 
   const loadAllData = async () => {
@@ -74,12 +78,24 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     await StorageService.saveTatuagens(newTatuagens);
   };
 
+  const clearAllData = async () => {
+    await StorageService.clearAll();
+    setTatuagens([]);
+    setClientes([]);
+  };
+
   const getTatuagensForDate = (date: Date) => {
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+      return [];
+    }
     const dateStr = date.toISOString().split('T')[0];
     return tatuagens.filter(t => t.data === dateStr && t.status === 'agendado');
   };
 
   const getTatuagensForWeek = (date: Date) => {
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+      return [];
+    }
     const currentDate = new Date(date);
     const firstDay = new Date(currentDate);
     firstDay.setHours(0, 0, 0, 0);
@@ -97,6 +113,9 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   const getTatuagensForMonth = (date: Date) => {
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+      return [];
+    }
     const year = date.getFullYear();
     const month = date.getMonth();
     return tatuagens.filter(t => {
@@ -115,6 +134,7 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         deleteTatuagem,
         loadTatuagens,
         addCliente,
+        clearAllData,
         getTatuagensForDate,
         getTatuagensForWeek,
         getTatuagensForMonth,

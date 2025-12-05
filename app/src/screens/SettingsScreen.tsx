@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAgenda } from '../contexts/AgendaContext';
 import { Colors, Shadows } from '../theme/colors';
@@ -11,7 +11,7 @@ type Nav = {
 
 export const SettingsScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
-  const { tatuagens } = useAgenda();
+  const { tatuagens, clearAllData } = useAgenda();
 
   const stats = {
     total: tatuagens.length,
@@ -23,6 +23,27 @@ export const SettingsScreen: React.FC = () => {
   const totalValorConcluido = tatuagens
     .filter(t => t.status === 'concluído')
     .reduce((acc, t) => acc + t.valor, 0);
+
+  const handleClearData = () => {
+    Alert.alert(
+      'Confirmar Ação',
+      'Você tem certeza que deseja apagar todos os dados? Esta ação não pode ser desfeita.',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Apagar',
+          style: 'destructive',
+          onPress: async () => {
+            await clearAllData();
+            Alert.alert('Sucesso', 'Todos os dados foram apagados.');
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -83,6 +104,19 @@ export const SettingsScreen: React.FC = () => {
             <View>
               <Text style={styles.actionLabel}>Histórico de Trabalhos</Text>
               <Text style={styles.actionSublabel}>Visualize todos os seus trabalhos passados</Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" style={styles.actionChevron} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionCard, { marginTop: 16 }]}
+            onPress={handleClearData}
+            activeOpacity={0.8}
+          >
+            <MaterialCommunityIcons name="trash-can-outline" style={[styles.actionIcon, { color: Colors.error }]} />
+            <View>
+              <Text style={styles.actionLabel}>Limpar Dados</Text>
+              <Text style={styles.actionSublabel}>Apaga todos os registros de tatuagens e clientes</Text>
             </View>
             <MaterialCommunityIcons name="chevron-right" style={styles.actionChevron} />
           </TouchableOpacity>
@@ -274,5 +308,4 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 });
-
 
