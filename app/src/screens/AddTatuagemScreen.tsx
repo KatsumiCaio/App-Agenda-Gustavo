@@ -1,36 +1,48 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, SafeAreaView, Modal, FlatList } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useAgenda } from '../contexts/AgendaContext';
 import { DateHelper } from '../utils/dateHelper';
+import { maskPhoneNumber } from '../utils/formatHelper';
 import { Colors, Shadows } from '../theme/colors';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Cliente } from '../types';
+
+type Nav = {
+  navigate: (value: string) => void;
+}
 
 export const AddTatuagemScreen: React.FC = () => {
-  const { addTatuagem } = useAgenda();
-  const [cliente, setCliente] = useState('');
+  const navigation = useNavigation<Nav>();
+  const { addTatuagem, clientes } = useAgenda();
+
+  const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
+  const [isModalVisible, setModalVisible] = useState(false);
+  
   const [descricao, setDescricao] = useState('');
   const [data, setData] = useState(DateHelper.getTodayString());
   const [horario, setHorario] = useState('10:00');
   const [local, setLocal] = useState('');
   const [valor, setValor] = useState('');
-  const [telefone, setTelefone] = useState('');
   const [observacoes, setObservacoes] = useState('');
 
   const handleAddTatuagem = async () => {
-    if (!cliente.trim() || !descricao.trim() || !data || !horario || !valor) {
-      Alert.alert('❌ Erro', 'Preencha todos os campos obrigatórios');
+    if (!selectedCliente || !descricao.trim() || !data || !horario || !valor) {
+      Alert.alert('❌ Erro', 'Preencha todos os campos obrigatórios, incluindo a seleção do cliente.');
       return;
     }
 
     try {
       await addTatuagem({
-        cliente: cliente.trim(),
+        cliente: selectedCliente.nome, // Salva o nome do cliente na tatuagem
+        // clienteId: selectedCliente.id, // Futuramente, podemos salvar o ID
         descricao: descricao.trim(),
         data,
         horario,
         local: local.trim() || 'Não especificado',
         valor: parseFloat(valor),
         status: 'agendado',
-        telefone: telefone.trim() || undefined,
+        telefone: selectedCliente.telefone || undefined,
         observacoes: observacoes.trim() || undefined,
       });
 
@@ -38,13 +50,12 @@ export const AddTatuagemScreen: React.FC = () => {
         {
           text: 'OK',
           onPress: () => {
-            setCliente('');
+            setSelectedCliente(null);
             setDescricao('');
             setData(DateHelper.getTodayString());
             setHorario('10:00');
             setLocal('');
             setValor('');
-            setTelefone('');
             setObservacoes('');
           },
         },
@@ -54,113 +65,152 @@ export const AddTatuagemScreen: React.FC = () => {
     }
   };
 
+  const onClientSelect = (cliente: Cliente) => {
+    setSelectedCliente(cliente);
+    setModalVisible(false);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Novo Agendamento</Text>
-          <Text style={styles.headerSubtitle}>Preencha os dados abaixo</Text>
-        </View>
-
-        <View style={styles.form}>
-          <Text style={styles.sectionTitle}>👤 Informações do Cliente</Text>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Nome do Cliente *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Digite o nome do cliente"
-              value={cliente}
-              onChangeText={setCliente}
-              placeholderTextColor={Colors.textMuted}
+      {/* Modal de Seleção de Cliente */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isModalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Selecione um Cliente</Text>
+            <FlatList
+              data={clientes}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity style={styles.clientItem} onPress={() => onClientSelect(item)}>
+                  <Text style={styles.clientName}>{item.nome}</Text>
+                  <Text style={styles.clientPhone}>{item.telefone}</Text>
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={<Text style={styles.emptyListText}>Nenhum cliente cadastrado.</Text>}
             />
+            <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+              <Text style={styles.closeButtonText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+        <View style={styles.form}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>👤 Informações do Cliente</Text>
+            <TouchableOpacity style={styles.newClientButton} onPress={() => navigation.navigate('CadastroCliente')}>
+              <MaterialCommunityIcons name="account-plus-outline" size={16} color={Colors.primary} />
+              <Text style={styles.newClientButtonText}>Novo Cliente</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Telefone</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="(11) 99999-9999"
-              value={telefone}
-              onChangeText={setTelefone}
-              keyboardType="phone-pad"
-              placeholderTextColor={Colors.textMuted}
-            />
+            <Text style={styles.label}>Cliente *</Text>
+            <TouchableOpacity style={styles.inputContainer} onPress={() => setModalVisible(true)}>
+              <MaterialCommunityIcons name="account-outline" style={styles.inputIcon} />
+              <Text style={[styles.input, !selectedCliente && styles.placeholderText]}>
+                {selectedCliente ? selectedCliente.nome : 'Selecione um cliente'}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <Text style={[styles.sectionTitle, styles.sectionTitleMargin]}>🎨 Detalhes da Tatuagem</Text>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Descrição *</Text>
-            <TextInput
-              style={[styles.input, styles.textAreaInput]}
-              placeholder="Descrição da tatuagem desejada"
-              value={descricao}
-              onChangeText={setDescricao}
-              multiline
-              numberOfLines={4}
-              placeholderTextColor={Colors.textMuted}
-            />
+            <View style={[styles.inputContainer, styles.textAreaContainer]}>
+              <MaterialCommunityIcons name="pencil-outline" style={styles.inputIcon} />
+              <TextInput
+                style={[styles.input, styles.textAreaInput]}
+                placeholder="Descrição da tatuagem desejada"
+                value={descricao}
+                onChangeText={setDescricao}
+                multiline
+                numberOfLines={4}
+                placeholderTextColor={Colors.textMuted}
+              />
+            </View>
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Local no Corpo</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Ex: Braço, Costas, Perna"
-              value={local}
-              onChangeText={setLocal}
-              placeholderTextColor={Colors.textMuted}
-            />
+            <View style={styles.inputContainer}>
+              <MaterialCommunityIcons name="map-marker-outline" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Ex: Braço, Costas, Perna"
+                value={local}
+                onChangeText={setLocal}
+                placeholderTextColor={Colors.textMuted}
+              />
+            </View>
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Valor (R$) *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="0.00"
-              value={valor}
-              onChangeText={setValor}
-              keyboardType="decimal-pad"
-              placeholderTextColor={Colors.textMuted}
-            />
+            <View style={styles.inputContainer}>
+              <MaterialCommunityIcons name="cash" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="0.00"
+                value={valor}
+                onChangeText={setValor}
+                keyboardType="decimal-pad"
+                placeholderTextColor={Colors.textMuted}
+              />
+            </View>
           </View>
 
           <Text style={[styles.sectionTitle, styles.sectionTitleMargin]}>📅 Agendamento</Text>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Data *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="YYYY-MM-DD"
-              value={data}
-              onChangeText={setData}
-              placeholderTextColor={Colors.textMuted}
-            />
+            <View style={styles.inputContainer}>
+              <MaterialCommunityIcons name="calendar" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="YYYY-MM-DD"
+                value={data}
+                onChangeText={setData}
+                placeholderTextColor={Colors.textMuted}
+              />
+            </View>
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Horário *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="HH:MM"
-              value={horario}
-              onChangeText={setHorario}
-              placeholderTextColor={Colors.textMuted}
-            />
+            <View style={styles.inputContainer}>
+              <MaterialCommunityIcons name="clock-outline" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="HH:MM"
+                value={horario}
+                onChangeText={setHorario}
+                placeholderTextColor={Colors.textMuted}
+              />
+            </View>
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Observações</Text>
-            <TextInput
-              style={[styles.input, styles.textAreaInput]}
-              placeholder="Observações adicionais"
-              value={observacoes}
-              onChangeText={setObservacoes}
-              multiline
-              numberOfLines={3}
-              placeholderTextColor={Colors.textMuted}
-            />
+            <View style={[styles.inputContainer, styles.textAreaContainer]}>
+              <MaterialCommunityIcons name="comment-text-outline" style={styles.inputIcon} />
+              <TextInput
+                style={[styles.input, styles.textAreaInput]}
+                placeholder="Observações adicionais"
+                value={observacoes}
+                onChangeText={setObservacoes}
+                multiline
+                numberOfLines={3}
+                placeholderTextColor={Colors.textMuted}
+              />
+            </View>
           </View>
 
           <TouchableOpacity 
@@ -179,72 +229,92 @@ export const AddTatuagemScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.background,
   },
   scroll: {
     flex: 1,
   },
-  header: {
-    backgroundColor: Colors.background,
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: Colors.textLight,
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    fontSize: 13,
-    color: Colors.textMuted,
-  },
   form: {
-    padding: 16,
+    padding: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 15,
+    fontSize: 18,
     fontWeight: '700',
-    color: Colors.text,
-    marginBottom: 12,
+    color: Colors.textLight,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.primary,
+    paddingLeft: 10,
+  },
+  newClientButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.backgroundLight,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+  },
+  newClientButtonText: {
+    color: Colors.primary,
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 6,
   },
   sectionTitleMargin: {
-    marginTop: 20,
+    marginTop: 24,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   label: {
     fontSize: 13,
-    fontWeight: '600',
-    color: Colors.text,
+    fontWeight: '500',
+    color: Colors.textMuted,
     marginBottom: 8,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: Colors.border,
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.backgroundLight,
     borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    fontSize: 14,
-    backgroundColor: '#FAFAFA',
-    color: Colors.text,
+    minHeight: 50,
+  },
+  inputIcon: {
+    fontSize: 20,
+    color: Colors.textMuted,
+    paddingHorizontal: 12,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingRight: 12,
+    fontSize: 15,
+    color: Colors.textLight,
     fontWeight: '500',
+  },
+  placeholderText: {
+    color: Colors.textMuted,
+    fontSize: 15,
+  },
+  textAreaContainer: {
+    alignItems: 'flex-start',
   },
   textAreaInput: {
     textAlignVertical: 'top',
-    paddingVertical: 12,
     minHeight: 100,
   },
   submitButton: {
     backgroundColor: Colors.primary,
-    paddingVertical: 15,
+    paddingVertical: 16,
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 24,
-    marginBottom: 20,
+    marginBottom: 40,
     ...Shadows.medium,
   },
   submitButtonText: {
@@ -252,4 +322,57 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  // Modal Styles
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+  },
+  modalContent: {
+    backgroundColor: Colors.backgroundLight,
+    borderRadius: 10,
+    padding: 20,
+    width: '90%',
+    maxHeight: '80%',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.textLight,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  clientItem: {
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.background,
+  },
+  clientName: {
+    fontSize: 16,
+    color: Colors.textLight,
+    fontWeight: '600',
+  },
+  clientPhone: {
+    fontSize: 13,
+    color: Colors.textMuted,
+    marginTop: 4,
+  },
+  emptyListText: {
+    color: Colors.textMuted,
+    textAlign: 'center',
+    paddingVertical: 20,
+  },
+  closeButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: 8,
+    paddingVertical: 12,
+    marginTop: 20,
+  },
+  closeButtonText: {
+    color: Colors.textLight,
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
 });
+

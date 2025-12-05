@@ -1,3 +1,11 @@
+export interface Cliente {
+  id: string;
+  nome: string;
+  telefone: string;
+  email?: string;
+  instagram?: string;
+}
+
 export interface Tatuagem {
   id: string;
   cliente: string;

@@ -181,16 +181,16 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({ onSelectItem }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.surface,
+    backgroundColor: 'transparent',
   },
   viewModeSelector: {
     flexDirection: 'row',
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: Colors.surface,
+    backgroundColor: 'transparent',
     justifyContent: 'space-around',
     borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
+    borderBottomColor: Colors.backgroundLight,
   },
   modeButton: {
     paddingVertical: 8,
@@ -217,9 +217,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 14,
-    backgroundColor: Colors.surface,
+    backgroundColor: 'transparent',
     borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
+    borderBottomColor: Colors.backgroundLight,
   },
   navButton: {
     paddingVertical: 8,
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 13,
     fontWeight: '700',
-    color: Colors.text,
+    color: Colors.textLight,
     textAlign: 'center',
     flex: 1,
     marginHorizontal: 8,
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: 16,
-    color: Colors.text,
+    color: Colors.textLight,
     fontWeight: '600',
     marginBottom: 4,
   },

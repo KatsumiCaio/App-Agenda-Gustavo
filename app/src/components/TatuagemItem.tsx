@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Tatuagem } from '../types';
 import { DateHelper } from '../utils/dateHelper';
+import { Colors, Shadows } from '../theme/colors';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface TatuagemItemProps {
   tatuagem: Tatuagem;
@@ -9,35 +11,63 @@ interface TatuagemItemProps {
 }
 
 export const TatuagemItem: React.FC<TatuagemItemProps> = ({ tatuagem, onPress }) => {
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const getStatus = () => {
+    switch (tatuagem.status) {
       case 'agendado':
-        return '#2196F3';
+        return { color: Colors.primary, text: 'Agendado', icon: 'calendar-clock' };
       case 'concluído':
-        return '#4CAF50';
+        return { color: Colors.success, text: 'Concluído', icon: 'check-circle' };
       case 'cancelado':
-        return '#f44336';
+        return { color: Colors.error, text: 'Cancelado', icon: 'close-circle' };
       default:
-        return '#999';
+        return { color: Colors.textMuted, text: 'Indefinido', icon: 'help-circle' };
     }
   };
 
+  const status = getStatus();
+
   return (
-    <TouchableOpacity style={styles.container} onPress={() => onPress(tatuagem)}>
+    <TouchableOpacity 
+      style={[styles.container, { borderLeftColor: status.color }]} 
+      onPress={() => onPress(tatuagem)}
+      activeOpacity={0.8}
+    >
+      {/* Header */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.cliente}>{tatuagem.cliente}</Text>
-          <Text style={styles.data}>{DateHelper.formatDate(tatuagem.data)} às {tatuagem.horario}</Text>
-        </View>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(tatuagem.status) }]}>
-          <Text style={styles.statusText}>
-            {tatuagem.status === 'agendado' ? 'Agendado' : tatuagem.status === 'concluído' ? 'Concluído' : 'Cancelado'}
-          </Text>
+        <Text style={styles.cliente}>{tatuagem.cliente}</Text>
+        <View style={[styles.statusBadge, { backgroundColor: status.color }]}>
+          <MaterialCommunityIcons name={status.icon as any} size={14} color={Colors.textLight} />
+          <Text style={styles.statusText}>{status.text}</Text>
         </View>
       </View>
-      <Text style={styles.descricao} numberOfLines={2}>{tatuagem.descricao}</Text>
+
+      {/* Detalhes */}
+      <View style={styles.detailsContainer}>
+        <Text style={styles.descricao} numberOfLines={2}>{tatuagem.descricao}</Text>
+        
+        <View style={styles.infoRow}>
+          <MaterialCommunityIcons name="calendar" size={14} color={Colors.textMuted} />
+          <Text style={styles.infoText}>{DateHelper.formatDate(tatuagem.data)} às {tatuagem.horario}</Text>
+        </View>
+        
+        {tatuagem.local && (
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons name="map-marker-outline" size={14} color={Colors.textMuted} />
+            <Text style={styles.infoText}>{tatuagem.local}</Text>
+          </View>
+        )}
+
+        {tatuagem.telefone && (
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons name="phone-outline" size={14} color={Colors.textMuted} />
+            <Text style={styles.infoText}>{tatuagem.telefone}</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Footer */}
       <View style={styles.footer}>
-        <Text style={styles.local}>📍 {tatuagem.local}</Text>
+        <Text style={styles.valorLabel}>Valor</Text>
         <Text style={styles.valor}>R$ {tatuagem.valor.toFixed(2)}</Text>
       </View>
     </TouchableOpacity>
@@ -46,62 +76,77 @@ export const TatuagemItem: React.FC<TatuagemItemProps> = ({ tatuagem, onPress })
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: Colors.backgroundLight,
+    marginBottom: 16,
     borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#2196F3',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderLeftWidth: 5,
+    ...Shadows.medium,
+    overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(0,0,0,0.1)',
   },
   cliente: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  data: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
+    fontWeight: '700',
+    color: Colors.textLight,
+    flex: 1,
   },
   statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 15,
   },
   statusText: {
-    color: '#fff',
+    color: Colors.textLight,
     fontSize: 11,
     fontWeight: '600',
+    marginLeft: 6,
+  },
+  detailsContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   descricao: {
-    fontSize: 13,
-    color: '#555',
+    fontSize: 14,
+    color: Colors.textMuted,
+    marginBottom: 12,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 8,
-    fontStyle: 'italic',
+  },
+  infoText: {
+    fontSize: 13,
+    color: Colors.textMuted,
+    marginLeft: 8,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderTopWidth: 1,
+    borderTopColor: Colors.background,
   },
-  local: {
-    fontSize: 12,
-    color: '#666',
+  valorLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: Colors.textMuted,
   },
   valor: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2196F3',
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.accent,
   },
 });

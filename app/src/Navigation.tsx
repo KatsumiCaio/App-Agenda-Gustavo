@@ -24,9 +24,6 @@ export const Navigation: React.FC = () => {
           headerTitleStyle: {
             fontWeight: 'bold',
           },
-          contentStyle: {
-            backgroundColor: Colors.background,
-          },
         }}
       >
         <Stack.Screen
@@ -37,12 +34,12 @@ export const Navigation: React.FC = () => {
         <Stack.Screen
           name="Agenda"
           component={AgendaScreen}
-          options={{ title: '📅 Minha Agenda' }}
+          options={{ title: 'Agenda' }}
         />
         <Stack.Screen
           name="AddTatuagem"
           component={AddTatuagemScreen}
-          options={{ title: '➕ Novo Agendamento' }}
+          options={{ title: 'Novo Agendamento' }}
         />
         <Stack.Screen
           name="CadastroCliente"
@@ -57,7 +54,7 @@ export const Navigation: React.FC = () => {
         <Stack.Screen
           name="Settings"
           component={SettingsScreen}
-          options={{ title: '📊 Estatísticas' }}
+          options={{ title: 'Mais' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

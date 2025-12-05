@@ -1,9 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Tatuagem } from '../types';
+import { Tatuagem, Cliente } from '../types';
 
 const TATUAGENS_KEY = 'tatuagens_data';
+const CLIENTES_KEY = 'clientes_data';
 
 export const StorageService = {
+  // Funções de Tatuagem
   async getTatuagens(): Promise<Tatuagem[]> {
     try {
       const data = await AsyncStorage.getItem(TATUAGENS_KEY);
@@ -43,9 +45,36 @@ export const StorageService = {
     await this.saveTatuagens(filtered);
   },
 
+  // Funções de Cliente
+  async getClientes(): Promise<Cliente[]> {
+    try {
+      const data = await AsyncStorage.getItem(CLIENTES_KEY);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error('Erro ao buscar clientes:', error);
+      return [];
+    }
+  },
+
+  async saveClientes(clientes: Cliente[]): Promise<void> {
+    try {
+      await AsyncStorage.setItem(CLIENTES_KEY, JSON.stringify(clientes));
+    } catch (error) {
+      console.error('Erro ao salvar clientes:', error);
+    }
+  },
+
+  async addCliente(cliente: Cliente): Promise<void> {
+    const clientes = await this.getClientes();
+    clientes.push(cliente);
+    await this.saveClientes(clientes);
+  },
+
+
   async clearAll(): Promise<void> {
     try {
       await AsyncStorage.removeItem(TATUAGENS_KEY);
+      await AsyncStorage.removeItem(CLIENTES_KEY);
     } catch (error) {
       console.error('Erro ao limpar dados:', error);
     }

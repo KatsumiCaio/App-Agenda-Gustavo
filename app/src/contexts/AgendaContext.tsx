@@ -1,14 +1,16 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Tatuagem } from '../types';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { Tatuagem, Cliente } from '../types';
 import { StorageService } from '../services/storage';
 import { v4 as uuidv4 } from 'uuid';
 
 interface AgendaContextType {
   tatuagens: Tatuagem[];
+  clientes: Cliente[];
   addTatuagem: (tatuagem: Omit<Tatuagem, 'id'>) => Promise<void>;
   updateTatuagem: (id: string, updates: Partial<Tatuagem>) => Promise<void>;
   deleteTatuagem: (id: string) => Promise<void>;
   loadTatuagens: () => Promise<void>;
+  addCliente: (cliente: Omit<Cliente, 'id'>) => Promise<void>;
   getTatuagensForDate: (date: Date) => Tatuagem[];
   getTatuagensForWeek: (date: Date) => Tatuagem[];
   getTatuagensForMonth: (date: Date) => Tatuagem[];
@@ -18,10 +20,26 @@ const AgendaContext = createContext<AgendaContextType | undefined>(undefined);
 
 export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [tatuagens, setTatuagens] = useState<Tatuagem[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+
+  useEffect(() => {
+    // Carrega os dados iniciais na montagem do provider
+    loadAllData();
+  }, []);
+
+  const loadAllData = async () => {
+    await loadTatuagens();
+    await loadClientes();
+  };
 
   const loadTatuagens = async () => {
     const data = await StorageService.getTatuagens();
     setTatuagens(data);
+  };
+  
+  const loadClientes = async () => {
+    const data = await StorageService.getClientes();
+    setClientes(data);
   };
 
   const addTatuagem = async (tatuagem: Omit<Tatuagem, 'id'>) => {
@@ -29,20 +47,31 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       ...tatuagem,
       id: uuidv4(),
     };
-    await StorageService.addTatuagem(newTatuagem);
-    setTatuagens([...tatuagens, newTatuagem]);
+    const newTatuagens = [...tatuagens, newTatuagem];
+    setTatuagens(newTatuagens);
+    await StorageService.saveTatuagens(newTatuagens);
+  };
+
+  const addCliente = async (cliente: Omit<Cliente, 'id'>) => {
+    const newCliente: Cliente = {
+      ...cliente,
+      id: uuidv4(),
+    };
+    const newClientes = [...clientes, newCliente];
+    setClientes(newClientes);
+    await StorageService.saveClientes(newClientes);
   };
 
   const updateTatuagem = async (id: string, updates: Partial<Tatuagem>) => {
-    await StorageService.updateTatuagem(id, updates);
-    setTatuagens(
-      tatuagens.map(t => (t.id === id ? { ...t, ...updates } : t))
-    );
+    const newTatuagens = tatuagens.map(t => (t.id === id ? { ...t, ...updates } : t));
+    setTatuagens(newTatuagens);
+    await StorageService.saveTatuagens(newTatuagens);
   };
 
   const deleteTatuagem = async (id: string) => {
-    await StorageService.deleteTatuagem(id);
-    setTatuagens(tatuagens.filter(t => t.id !== id));
+    const newTatuagens = tatuagens.filter(t => t.id !== id);
+    setTatuagens(newTatuagens);
+    await StorageService.saveTatuagens(newTatuagens);
   };
 
   const getTatuagensForDate = (date: Date) => {
@@ -80,10 +109,12 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     <AgendaContext.Provider
       value={{
         tatuagens,
+        clientes,
         addTatuagem,
         updateTatuagem,
         deleteTatuagem,
         loadTatuagens,
+        addCliente,
         getTatuagensForDate,
         getTatuagensForWeek,
         getTatuagensForMonth,
