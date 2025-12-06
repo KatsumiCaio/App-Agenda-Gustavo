@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, SafeAreaView, Modal, FlatList, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAgenda } from '../contexts/AgendaContext';
-import { DateHelper } from '../utils/dateHelper';
 import { format } from 'date-fns';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Colors, Shadows } from '../theme/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Cliente } from '../types';
+import WebDatePicker from '../components/WebDatePicker';
+import WebTimePicker from '../components/WebTimePicker';
 
 type Nav = {
   navigate: (value: string) => void;
@@ -26,23 +26,6 @@ export const AddTatuagemScreen: React.FC = () => {
   const [local, setLocal] = useState('');
   const [valor, setValor] = useState('');
   const [observacoes, setObservacoes] = useState('');
-
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-
-  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    const currentDate = selectedDate || date;
-    setShowDatePicker(Platform.OS === 'ios');
-    setDate(currentDate);
-  };
-
-  const onTimeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    const currentDate = selectedDate || date;
-    setShowTimePicker(Platform.OS === 'ios');
-    if (selectedDate) {
-      setHorario(format(currentDate, 'HH:mm'));
-    }
-  };
 
   const handleAddTatuagem = async () => {
     if (!selectedCliente || !descricao.trim() || !date || !horario || !valor) {
@@ -117,28 +100,6 @@ export const AddTatuagemScreen: React.FC = () => {
         </View>
       </Modal>
 
-      {showDatePicker && (
-        <DateTimePicker
-          testID="datePicker"
-          value={date}
-          mode="date"
-          is24Hour={true}
-          display="default"
-          onChange={onDateChange}
-        />
-      )}
-
-      {showTimePicker && (
-        <DateTimePicker
-          testID="timePicker"
-          value={date}
-          mode="time"
-          is24Hour={true}
-          display="default"
-          onChange={onTimeChange}
-        />
-      )}
-
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
           <View style={styles.sectionHeader}>
@@ -210,22 +171,30 @@ export const AddTatuagemScreen: React.FC = () => {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Data *</Text>
-            <TouchableOpacity style={styles.inputContainer} onPress={() => setShowDatePicker(true)}>
-              <MaterialCommunityIcons name="calendar" style={styles.inputIcon} />
-              <Text style={styles.input}>
-                {format(date, 'dd/MM/yyyy')}
-              </Text>
-            </TouchableOpacity>
+            {Platform.OS === 'web' ? (
+              <WebDatePicker date={date} setDate={setDate} />
+            ) : (
+              <TouchableOpacity style={styles.inputContainer} onPress={() => { /* lógica para nativo aqui */ }}>
+                <MaterialCommunityIcons name="calendar" style={styles.inputIcon} />
+                <Text style={styles.input}>
+                  {format(date, 'dd/MM/yyyy')}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Horário *</Text>
-            <TouchableOpacity style={styles.inputContainer} onPress={() => setShowTimePicker(true)}>
-              <MaterialCommunityIcons name="clock-outline" style={styles.inputIcon} />
-              <Text style={styles.input}>
-                {horario}
-              </Text>
-            </TouchableOpacity>
+            {Platform.OS === 'web' ? (
+              <WebTimePicker horario={horario} setHorario={setHorario} />
+            ) : (
+              <TouchableOpacity style={styles.inputContainer} onPress={() => { /* lógica para nativo aqui */ }}>
+                <MaterialCommunityIcons name="clock-outline" style={styles.inputIcon} />
+                <Text style={styles.input}>
+                  {horario}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.inputGroup}>
