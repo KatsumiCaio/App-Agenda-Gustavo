@@ -86,6 +86,7 @@ npm start
 2. Preencha os campos obrigatórios (nome, descrição, data, horário e valor)
 3. Preencha os campos opcionais se desejar
 4. Toque em **"Agendar Tatuagem"**
+5. Após o agendamento, os campos do formulário serão limpos e uma mensagem de sucesso será exibida.
 
 ### Visualizar Agendamentos
 
@@ -187,6 +188,11 @@ npm install
 ### Problemas com AsyncStorage
 - Verifique se `@react-native-async-storage/async-storage` está instalado
 - Execute: `npx expo install @react-native-async-storage/async-storage`
+
+### Alertas (Alert.alert) não aparecem na web
+- Em alguns ambientes, especialmente na web via Expo, o `Alert.alert` padrão pode não ser exibido corretamente.
+- Uma mensagem de sucesso visual temporária foi implementada como alternativa para as ações de salvar/agendar.
+- Verifique o console do navegador para erros que possam estar bloqueando pop-ups.
 
 ## 📄 Licença
 

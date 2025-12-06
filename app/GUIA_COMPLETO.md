@@ -24,6 +24,7 @@ Formulário completo com os campos:
 - Data *(obrigatório)*
 - Horário *(obrigatório)*
 - Observações (opcional)
+Após o agendamento, os campos do formulário são limpos e uma mensagem de sucesso é exibida.
 
 #### 3. **MAIS** (Estatísticas e Informações)
 - Card com total de tatuagens
