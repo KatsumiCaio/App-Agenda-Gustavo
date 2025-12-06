@@ -26,6 +26,7 @@ export const AddTatuagemScreen: React.FC = () => {
   const [local, setLocal] = useState('');
   const [valor, setValor] = useState('');
   const [observacoes, setObservacoes] = useState('');
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const handleAddTatuagem = async () => {
     if (!selectedCliente || !descricao.trim() || !date || !horario || !valor) {
@@ -46,20 +47,21 @@ export const AddTatuagemScreen: React.FC = () => {
         observacoes: observacoes.trim() || undefined,
       });
 
-      Alert.alert('✅ Sucesso', 'Tatuagem agendada com sucesso!', [
-        {
-          text: 'OK',
-          onPress: () => {
-            setSelectedCliente(null);
-            setDescricao('');
-            setDate(new Date());
-            setHorario('10:00');
-            setLocal('');
-            setValor('');
-            setObservacoes('');
-          },
-        },
-      ]);
+      // Limpa os campos imediatamente após o sucesso
+      setSelectedCliente(null);
+      setDescricao('');
+      setDate(new Date());
+      setHorario('10:00');
+      setLocal('');
+      setValor('');
+      setObservacoes('');
+
+      // Exibe a mensagem de sucesso
+      setShowSuccessMessage(true);
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 3000); // Esconde a mensagem após 3 segundos
+
     } catch (error) {
       Alert.alert('❌ Erro', 'Falha ao agendar tatuagem');
     }
@@ -102,6 +104,13 @@ export const AddTatuagemScreen: React.FC = () => {
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
+          {showSuccessMessage && (
+            <View style={styles.successMessageContainer}>
+              <MaterialCommunityIcons name="check-circle-outline" size={20} color="#4CAF50" />
+              <Text style={styles.successMessageText}>Tatuagem agendada com sucesso!</Text>
+            </View>
+          )}
+
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>👤 Informações do Cliente</Text>
             <TouchableOpacity style={styles.newClientButton} onPress={() => navigation.navigate('CadastroCliente')}>
@@ -373,6 +382,21 @@ const styles = StyleSheet.create({
     color: Colors.textLight,
     textAlign: 'center',
     fontWeight: 'bold',
+  },
+  successMessageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.successLight, // Usar uma cor de sucesso clara
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+    justifyContent: 'center',
+  },
+  successMessageText: {
+    color: Colors.success, // Usar uma cor de sucesso para o texto
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

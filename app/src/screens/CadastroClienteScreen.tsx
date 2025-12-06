@@ -14,6 +14,7 @@ const CadastroClienteScreen: React.FC = () => {
   const [telefone, setTelefone] = useState('');
   const [email, setEmail] = useState('');
   const [instagram, setInstagram] = useState('');
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const handleSaveCliente = async () => {
     if (!nome.trim() || !telefone.trim()) {
@@ -29,22 +30,24 @@ const CadastroClienteScreen: React.FC = () => {
         instagram: instagram.trim() || undefined,
       });
 
-      Alert.alert('✅ Sucesso', 'Cliente cadastrado com sucesso!', [
-        {
-          text: 'OK',
-          onPress: () => {
-            setNome('');
-            setTelefone('');
-            setEmail('');
-            setInstagram('');
-          },
-        },
-      ]);
+      // Limpa os campos imediatamente após o sucesso
+      setNome('');
+      setTelefone('');
+      setEmail('');
+      setInstagram('');
+
+      // Exibe a mensagem de sucesso
+      setShowSuccessMessage(true);
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 3000); // Esconde a mensagem após 3 segundos
+
     } catch (error) {
       console.error('Erro ao salvar cliente:', error);
       Alert.alert('❌ Erro', 'Não foi possível salvar o cliente.');
     }
   };
+
 //...
 
   return (
@@ -53,6 +56,13 @@ const CadastroClienteScreen: React.FC = () => {
         <View style={styles.form}>
           <Text style={styles.title}>Novo Cliente</Text>
           <Text style={styles.subtitle}>Adicione um novo cliente à sua lista.</Text>
+
+          {showSuccessMessage && (
+            <View style={styles.successMessageContainer}>
+              <MaterialCommunityIcons name="check-circle-outline" size={20} color={Colors.success} />
+              <Text style={styles.successMessageText}>Cliente cadastrado com sucesso!</Text>
+            </View>
+          )}
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Nome Completo *</Text>
@@ -193,6 +203,21 @@ const styles = StyleSheet.create({
     color: Colors.textLight,
     fontSize: 16,
     fontWeight: '700',
+  },
+  successMessageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.successLight, // Usar uma cor de sucesso clara
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+    justifyContent: 'center',
+  },
+  successMessageText: {
+    color: Colors.success, // Usar uma cor de sucesso para o texto
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

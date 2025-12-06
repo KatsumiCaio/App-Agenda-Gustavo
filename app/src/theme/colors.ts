@@ -14,6 +14,7 @@ export const Colors = {
   
   // Cores de Status
   success: '#4CAF50',        // Verde
+  successLight: '#D4EDDA',  // Um verde mais claro para backgrounds de sucesso
   warning: '#FFA500',        // Laranja
   error: '#E63946',          // Vermelho
   info: '#FF6B35',           // Laranja Quente
