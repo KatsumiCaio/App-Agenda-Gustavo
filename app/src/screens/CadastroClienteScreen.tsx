@@ -9,16 +9,39 @@ import { useAgenda } from '../contexts/AgendaContext';
 // ...
 
 const CadastroClienteScreen: React.FC = () => {
-  const { addCliente } = useAgenda();
+  const { addCliente, clientes } = useAgenda();
   const [nome, setNome] = useState('');
   const [telefone, setTelefone] = useState('');
   const [email, setEmail] = useState('');
   const [instagram, setInstagram] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [errorMessageText, setErrorMessageText] = useState('');
 
   const handleSaveCliente = async () => {
+    // Esconde qualquer mensagem anterior
+    setShowSuccessMessage(false);
+    setShowErrorMessage(false);
+    setErrorMessageText('');
+
     if (!nome.trim() || !telefone.trim()) {
-      Alert.alert('❌ Erro', 'Nome e Telefone são obrigatórios.');
+      setErrorMessageText('Nome e Telefone são obrigatórios.');
+      setShowErrorMessage(true);
+      setTimeout(() => setShowErrorMessage(false), 3000);
+      return;
+    }
+
+    // Verifica se já existe um cliente com o mesmo nome (case-insensitive)
+    const nomeNormalizado = nome.trim().toLowerCase();
+    const clienteExistente = clientes.find(
+      (c) => c.nome.toLowerCase() === nomeNormalizado
+    );
+
+    if (clienteExistente) {
+      setErrorMessageText(`Já existe um cliente cadastrado com o nome "${nome.trim()}".`);
+      setShowErrorMessage(true);
+      setTimeout(() => setShowErrorMessage(false), 3000);
+      // Não limpa os campos para que o usuário possa corrigir o nome
       return;
     }
     
@@ -44,7 +67,9 @@ const CadastroClienteScreen: React.FC = () => {
 
     } catch (error) {
       console.error('Erro ao salvar cliente:', error);
-      Alert.alert('❌ Erro', 'Não foi possível salvar o cliente.');
+      setErrorMessageText('Não foi possível salvar o cliente devido a um erro interno.');
+      setShowErrorMessage(true);
+      setTimeout(() => setShowErrorMessage(false), 3000);
     }
   };
 
@@ -61,6 +86,13 @@ const CadastroClienteScreen: React.FC = () => {
             <View style={styles.successMessageContainer}>
               <MaterialCommunityIcons name="check-circle-outline" size={20} color={Colors.success} />
               <Text style={styles.successMessageText}>Cliente cadastrado com sucesso!</Text>
+            </View>
+          )}
+
+          {showErrorMessage && (
+            <View style={styles.errorMessageContainer}>
+              <MaterialCommunityIcons name="alert-circle-outline" size={20} color={Colors.error} />
+              <Text style={styles.errorMessageText}>{errorMessageText}</Text>
             </View>
           )}
 
@@ -215,6 +247,21 @@ const styles = StyleSheet.create({
   },
   successMessageText: {
     color: Colors.success, // Usar uma cor de sucesso para o texto
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  errorMessageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.errorLight, // Usar uma cor de erro clara
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+    justifyContent: 'center',
+  },
+  errorMessageText: {
+    color: Colors.error, // Usar uma cor de erro para o texto
     marginLeft: 8,
     fontSize: 14,
     fontWeight: '600',

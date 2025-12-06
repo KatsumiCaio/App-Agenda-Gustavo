@@ -17,6 +17,7 @@ export const Colors = {
   successLight: '#D4EDDA',  // Um verde mais claro para backgrounds de sucesso
   warning: '#FFA500',        // Laranja
   error: '#E63946',          // Vermelho
+  errorLight: '#F8D7DA',    // Um vermelho mais claro para backgrounds de erro
   info: '#FF6B35',           // Laranja Quente
   
   // Cores de Texto
