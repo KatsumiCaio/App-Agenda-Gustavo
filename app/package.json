@@ -2,9 +2,9 @@
   "name": "app-agenda-tatuador",
   "version": "1.0.0",
   "description": "App de agenda pessoal para tatuador",
-  "main": "index.ts",
   "scripts": {
     "start": "expo start --clear",
+    "start:dev": "expo start --dev-client",
     "start-tunnel": "expo start --tunnel",
     "android": "expo start --android",
     "ios": "expo start --ios",

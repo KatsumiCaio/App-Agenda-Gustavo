@@ -18,12 +18,15 @@
     "android": {
       "package": "com.agendatatuador.app"
     },
-    "web": {},
+    "web": {
+      "bundler": "metro"
+    },
     "plugins": [],
     "extra": {
       "eas": {
-        "projectId": "08ec635a-e9be-40ad-b79e-7450273c662d"
+        "projectId": "11e047cc-27d3-4884-84f3-2dfcbf1d4f14"
       }
-    }
+    },
+    "owner": "katsumicaio"
   }
 }
