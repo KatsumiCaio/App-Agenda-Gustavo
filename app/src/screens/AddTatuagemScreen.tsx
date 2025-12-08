@@ -6,7 +6,6 @@ import { format } from 'date-fns';
 import { Colors, Shadows } from '../theme/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Cliente } from '../types';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import WebDatePicker from '../components/WebDatePicker';
 import WebTimePicker from '../components/WebTimePicker';
 
@@ -28,8 +27,6 @@ export const AddTatuagemScreen: React.FC = () => {
   const [valor, setValor] = useState('');
   const [observacoes, setObservacoes] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
 
   const handleAddTatuagem = async () => {
     if (!selectedCliente || !descricao.trim() || !date || !horario || !valor) {
@@ -73,21 +70,6 @@ export const AddTatuagemScreen: React.FC = () => {
   const onClientSelect = (cliente: Cliente) => {
     setSelectedCliente(cliente);
     setModalVisible(false);
-  };
-
-  const onDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setDate(selectedDate);
-    }
-  };
-
-  const onTimeChange = (event: any, selectedTime?: Date) => {
-    setShowTimePicker(false);
-    if (selectedTime) {
-      const formattedTime = format(selectedTime, 'HH:mm');
-      setHorario(formattedTime);
-    }
   };
 
   return (
@@ -201,24 +183,12 @@ export const AddTatuagemScreen: React.FC = () => {
             {Platform.OS === 'web' ? (
               <WebDatePicker date={date} setDate={setDate} />
             ) : (
-              <>
-                <TouchableOpacity style={styles.inputContainer} onPress={() => setShowDatePicker(true)}>
-                  <MaterialCommunityIcons name="calendar" style={styles.inputIcon} />
-                  <Text style={styles.input}>
-                    {format(date, 'dd/MM/yyyy')}
-                  </Text>
-                </TouchableOpacity>
-                {showDatePicker && (
-                  <DateTimePicker
-                    testID="datePicker"
-                    value={date}
-                    mode="date"
-                    is24Hour={true}
-                    display="default"
-                    onChange={onDateChange}
-                  />
-                )}
-              </>
+              <TouchableOpacity style={styles.inputContainer} onPress={() => { /* lógica para nativo aqui */ }}>
+                <MaterialCommunityIcons name="calendar" style={styles.inputIcon} />
+                <Text style={styles.input}>
+                  {format(date, 'dd/MM/yyyy')}
+                </Text>
+              </TouchableOpacity>
             )}
           </View>
 
@@ -227,24 +197,12 @@ export const AddTatuagemScreen: React.FC = () => {
             {Platform.OS === 'web' ? (
               <WebTimePicker horario={horario} setHorario={setHorario} />
             ) : (
-              <>
-                <TouchableOpacity style={styles.inputContainer} onPress={() => setShowTimePicker(true)}>
-                  <MaterialCommunityIcons name="clock-outline" style={styles.inputIcon} />
-                  <Text style={styles.input}>
-                    {horario}
-                  </Text>
-                </TouchableOpacity>
-                {showTimePicker && (
-                  <DateTimePicker
-                    testID="timePicker"
-                    value={new Date(date.toDateString() + ' ' + horario)}
-                    mode="time"
-                    is24Hour={true}
-                    display="default"
-                    onChange={onTimeChange}
-                  />
-                )}
-              </>
+              <TouchableOpacity style={styles.inputContainer} onPress={() => { /* lógica para nativo aqui */ }}>
+                <MaterialCommunityIcons name="clock-outline" style={styles.inputIcon} />
+                <Text style={styles.input}>
+                  {horario}
+                </Text>
+              </TouchableOpacity>
             )}
           </View>
 
