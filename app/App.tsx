@@ -2,7 +2,6 @@
 
 import 'react-native-get-random-values';
 import React from 'react';
-import { registerRootComponent } from 'expo';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AgendaProvider } from './src/contexts/AgendaContext';
 import { Navigation } from './src/Navigation';
@@ -20,4 +19,4 @@ function App() {
   );
 }
 
-registerRootComponent(App);
+export default App;

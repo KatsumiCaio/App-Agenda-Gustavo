@@ -25,7 +25,6 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   useEffect(() => {
     const initialize = async () => {
-      await StorageService.clearAll();
       await loadAllData();
     };
     initialize();

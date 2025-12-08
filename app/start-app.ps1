@@ -1,4 +1,5 @@
 #!/usr/bin/env pwsh
+$OutputEncoding = [System.Text.Encoding]::UTF8
 
 # Script para iniciar o app Agenda Tatuador
 

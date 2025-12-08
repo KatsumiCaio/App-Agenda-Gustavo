@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Colors } from '../theme/colors';
+import { Colors, Shadows } from '../theme/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 type Nav = {
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
-    ...Colors.medium,
+    ...Shadows.medium,
     elevation: 8,
   },
   cardText: {

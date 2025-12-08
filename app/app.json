@@ -18,8 +18,12 @@
     "android": {
       "package": "com.agendatatuador.app"
     },
-    "web": {
-    },
-    "plugins": []
+    "web": {},
+    "plugins": [],
+    "extra": {
+      "eas": {
+        "projectId": "08ec635a-e9be-40ad-b79e-7450273c662d"
+      }
+    }
   }
 }
