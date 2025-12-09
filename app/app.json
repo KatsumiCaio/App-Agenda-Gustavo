@@ -5,14 +5,13 @@
     "version": "1.0.0",
     "runtimeVersion": "1.0.0",
     "updates": {
-      "enabled": false,
-      "checkAutomatically": "never"
+      "enabled": false
     },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
-      "supportsTabletMode": true,
+      "supportsTablet": true,
       "bundleIdentifier": "com.agendatatuador.app"
     },
     "android": {

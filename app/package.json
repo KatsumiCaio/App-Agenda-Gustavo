@@ -20,6 +20,7 @@
     "date-fns": "^4.1.0",
     "expo": "^54.0.0",
     "expo-dev-client": "~6.0.20",
+    "expo-font": "~14.0.10",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -34,7 +35,6 @@
   "devDependencies": {
     "@babel/core": "^7.26.0",
     "@types/react": "~19.1.10",
-    "@types/react-native": "^0.73.0",
     "@types/uuid": "^11.0.0",
     "pretty-format": "^30.2.0",
     "typescript": "~5.9.2"
