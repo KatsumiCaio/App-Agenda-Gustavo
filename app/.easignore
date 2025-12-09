@@ -1,0 +1,4 @@
+# Ignora arquivos e pastas na raiz do projeto que causam erro de permissão
+.vscode
+/package-lock.json
+/LICENSE
