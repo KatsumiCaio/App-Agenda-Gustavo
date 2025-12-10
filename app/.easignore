@@ -2,3 +2,23 @@
 .vscode
 /package-lock.json
 /LICENSE
+
+# Expo cache
+.expo/
+
+# Dependências
+node_modules/
+
+# Artefatos de build do Android
+android/build/
+android/app/build/
+android/.gradle/
+
+# Artefatos de build do iOS
+ios/build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+metro-debug.log
