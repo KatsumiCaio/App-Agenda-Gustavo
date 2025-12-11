@@ -3,19 +3,20 @@ import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Platform } from
 import { useNavigation } from '@react-navigation/native';
 import { Colors, Shadows } from '../theme/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../Navigation';
 
-type Nav = {
-  navigate: (value: string) => void;
-}
+// Usa a tipagem correta do React Navigation, garantindo que só podemos navegar para rotas existentes
+type NavigationProps = NativeStackNavigationProp<RootStackParamList>;
 
 const MainScreen: React.FC = () => {
-  const navigation = useNavigation<Nav>();
+  const navigation = useNavigation<NavigationProps>();
 
   const menuItems = [
     { title: 'Agenda', screen: 'Agenda', icon: 'calendar-month' },
     { title: 'Cadastrar Cliente', screen: 'CadastroCliente', icon: 'account-plus' },
     { title: 'Agendar Trabalho', screen: 'AddTatuagem', icon: 'plus-circle' },
-    { title: 'Histórico de Trabalhos', screen: 'HistoricoTrabalhos', icon: 'history' },
+    { title: 'Histórico', screen: 'ListaClientes', icon: 'history' }, // Alterado aqui
   ];
 
   return (
@@ -27,7 +28,7 @@ const MainScreen: React.FC = () => {
             <TouchableOpacity
               key={item.screen}
               style={styles.card}
-              onPress={() => navigation.navigate(item.screen)}
+              onPress={() => navigation.navigate(item.screen as keyof RootStackParamList)} // Type assertion
             >
               <MaterialCommunityIcons name={item.icon as any} size={48} color={Colors.primary} />
               <Text style={styles.cardText}>{item.title}</Text>

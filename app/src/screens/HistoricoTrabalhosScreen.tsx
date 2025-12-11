@@ -4,17 +4,24 @@ import { useAgenda } from '../contexts/AgendaContext';
 import { TatuagemItem } from '../components/TatuagemItem';
 import { Colors } from '../theme/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../Navigation'; // Supondo que a definição do stack esteja aqui
 
-const HistoricoTrabalhosScreen: React.FC = () => {
+type Props = NativeStackScreenProps<RootStackParamList, 'HistoricoTrabalhos'>;
+
+const HistoricoTrabalhosScreen: React.FC<Props> = ({ route }) => {
+  const { clienteNome } = route.params;
   const { tatuagens } = useAgenda();
 
-  // Ordena as tatuagens pela data mais recente
-  const sortedTatuagens = [...tatuagens].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+  // Filtra as tatuagens para o cliente específico e ordena pela data mais recente
+  const trabalhosDoCliente = [...tatuagens]
+    .filter(t => t.cliente === clienteNome)
+    .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
 
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
-        data={sortedTatuagens}
+        data={trabalhosDoCliente}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TatuagemItem 
@@ -27,15 +34,15 @@ const HistoricoTrabalhosScreen: React.FC = () => {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text style={styles.title}>Histórico Completo</Text>
-            <Text style={styles.subtitle}>Todos os seus trabalhos, do mais recente ao mais antigo.</Text>
+            <Text style={styles.title}>Histórico de</Text>
+            <Text style={styles.clientName}>{clienteNome}</Text>
           </View>
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <MaterialCommunityIcons name="clipboard-text-off-outline" style={styles.emptyIcon} />
             <Text style={styles.emptyText}>Nenhum trabalho encontrado</Text>
-            <Text style={styles.emptySubtext}>Quando você adicionar novos agendamentos, eles aparecerão aqui.</Text>
+            <Text style={styles.emptySubtext}>Este cliente ainda não possui trabalhos registrados.</Text>
           </View>
         }
       />
@@ -59,6 +66,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: Colors.textLight,
     marginBottom: 4,
+  },
+  clientName: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: Colors.primary, // Destaque para o nome do cliente
   },
   subtitle: {
     fontSize: 14,
