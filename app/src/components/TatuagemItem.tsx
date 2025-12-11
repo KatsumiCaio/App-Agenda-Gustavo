@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Tatuagem } from '../types';
 import { DateHelper } from '../utils/dateHelper';
 import { Colors, Shadows } from '../theme/colors';
@@ -45,6 +45,10 @@ export const TatuagemItem: React.FC<TatuagemItemProps> = ({ tatuagem, onPress })
       <View style={styles.detailsContainer}>
         <Text style={styles.descricao} numberOfLines={2}>{tatuagem.descricao}</Text>
         
+        {tatuagem.imagem && (
+          <Image source={{ uri: tatuagem.imagem }} style={styles.imagemPreview} />
+        )}
+
         <View style={styles.infoRow}>
           <MaterialCommunityIcons name="calendar" size={14} color={Colors.textMuted} />
           <Text style={styles.infoText}>{DateHelper.formatDate(tatuagem.data)} às {tatuagem.horario}</Text>
@@ -118,6 +122,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textMuted,
     marginBottom: 12,
+  },
+  imagemPreview: {
+    width: '100%',
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 12,
+    backgroundColor: Colors.surface,
   },
   infoRow: {
     flexDirection: 'row',

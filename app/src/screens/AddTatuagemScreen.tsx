@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, SafeAreaView, Modal, FlatList, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, SafeAreaView, Modal, FlatList, Platform, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAgenda } from '../contexts/AgendaContext';
 import { format } from 'date-fns';
@@ -8,6 +8,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Cliente } from '../types';
 import WebDatePicker from '../components/WebDatePicker';
 import WebTimePicker from '../components/WebTimePicker';
+import * as ImagePicker from 'expo-image-picker';
 
 type Nav = {
   navigate: (value: string) => void;
@@ -26,7 +27,29 @@ export const AddTatuagemScreen: React.FC = () => {
   const [local, setLocal] = useState('');
   const [valor, setValor] = useState('');
   const [observacoes, setObservacoes] = useState('');
+  const [imagem, setImagem] = useState<string | null>(null); // Novo estado para a imagem
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  // Função para selecionar imagem
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissão necessária', 'Precisamos de acesso à sua galeria para selecionar uma imagem.');
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImagem(result.assets[0].uri);
+    }
+  };
+
 
   const handleAddTatuagem = async () => {
     if (!selectedCliente || !descricao.trim() || !date || !horario || !valor) {
@@ -45,6 +68,7 @@ export const AddTatuagemScreen: React.FC = () => {
         status: 'agendado',
         telefone: selectedCliente.telefone || undefined,
         observacoes: observacoes.trim() || undefined,
+        imagem: imagem || undefined, // Adiciona a imagem
       });
 
       // Limpa os campos imediatamente após o sucesso
@@ -55,6 +79,7 @@ export const AddTatuagemScreen: React.FC = () => {
       setLocal('');
       setValor('');
       setObservacoes('');
+      setImagem(null); // Limpa a imagem
 
       // Exibe a mensagem de sucesso
       setShowSuccessMessage(true);
@@ -145,6 +170,23 @@ export const AddTatuagemScreen: React.FC = () => {
                 placeholderTextColor={Colors.textMuted}
               />
             </View>
+          </View>
+
+          {/* Botão de Imagem e Preview */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Imagem de Referência</Text>
+            <TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
+              <MaterialCommunityIcons name="camera-plus-outline" size={20} color={Colors.primary} />
+              <Text style={styles.imagePickerButtonText}>Selecionar Imagem</Text>
+            </TouchableOpacity>
+            {imagem && (
+              <View style={styles.imagePreviewContainer}>
+                <Image source={{ uri: imagem }} style={styles.imagePreview} />
+                <TouchableOpacity style={styles.removeImageButton} onPress={() => setImagem(null)}>
+                  <MaterialCommunityIcons name="close-circle" size={24} color={Colors.danger} />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           <View style={styles.inputGroup}>
@@ -316,6 +358,37 @@ const styles = StyleSheet.create({
   textAreaInput: {
     textAlignVertical: 'top',
     minHeight: 100,
+  },
+  imagePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.backgroundLight,
+    padding: 15,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
+  imagePickerButtonText: {
+    color: Colors.primary,
+    fontSize: 15,
+    fontWeight: '600',
+    marginLeft: 10,
+  },
+  imagePreviewContainer: {
+    marginTop: 15,
+    alignItems: 'center',
+    position: 'relative',
+  },
+  imagePreview: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    backgroundColor: Colors.background,
+    borderRadius: 12,
   },
   submitButton: {
     backgroundColor: Colors.primary,
