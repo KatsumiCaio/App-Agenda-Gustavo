@@ -8,6 +8,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Cliente } from '../types';
 import WebDatePicker from '../components/WebDatePicker';
 import WebTimePicker from '../components/WebTimePicker';
+import { saveImagePermanently } from '../utils/fileHelper';
 import * as ImagePicker from 'expo-image-picker';
 
 type Nav = {
@@ -46,7 +47,12 @@ export const AddTatuagemScreen: React.FC = () => {
     });
 
     if (!result.canceled) {
-      setImagemModelo(result.assets[0].uri);
+      try {
+        const permanentUri = await saveImagePermanently(result.assets[0].uri);
+        setImagemModelo(permanentUri);
+      } catch (error) {
+        Alert.alert('Erro ao Salvar Imagem', 'Ocorreu um erro ao tentar salvar a imagem permanentemente.');
+      }
     }
   };
 

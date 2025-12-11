@@ -1,46 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Modal, StyleSheet, TextInput, ScrollView, TouchableOpacity, Platform, Image } from 'react-native';
+import { View, Text, Modal, StyleSheet, TextInput, ScrollView, TouchableOpacity, Platform, Image, Alert } from 'react-native';
 import { Tatuagem } from '../types';
 import { Colors, Shadows } from '../theme/colors';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-
-interface EditTatuagemPanelProps {
-  visible: boolean;
-  onClose: () => void;
-  tatuagem: Tatuagem | null;
-  onSave: (tatuagem: Tatuagem) => void;
-}
-
-const EditTatuagemPanel: React.FC<EditTatuagemPanelProps> = ({ visible, onClose, tatuagem, onSave }) => {
-  const [editedTatuagem, setEditedTatuagem] = useState<Tatuagem | null>(null);
-
-  useEffect(() => {
-    setEditedTatuagem(tatuagem);
-  }, [tatuagem]);
-
-  const pickImage = async () => {
-    // Pedir permissão
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      alert('Desculpe, precisamos de permissão para acessar suas fotos!');
-      return;
-    }
-
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled && editedTatuagem) {
-      setEditedTatuagem({ ...editedTatuagem, imagemFinal: result.assets[0].uri });
-    }
-  };
-  
-  const removeImage = () => {
-    if (editedTatuagem) {
+import { saveImagePermanently, deleteImage } from '../utils/fileHelper';
+...
+  const removeImage = async () => {
+    if (editedTatuagem && editedTatuagem.imagemFinal) {
+      await deleteImage(editedTatuagem.imagemFinal);
       setEditedTatuagem({ ...editedTatuagem, imagemFinal: undefined });
     }
   };
