@@ -6,6 +6,8 @@ import { TatuagemItem } from './TatuagemItem';
 import { DateHelper } from '../utils/dateHelper';
 import { Colors, Shadows } from '../theme/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import EditTatuagemPanel from './EditTatuagemPanel';
+import { Tatuagem } from '../types';
 
 interface ViewSelectorProps {
   onSelectItem?: (item: any) => void;
@@ -14,7 +16,25 @@ interface ViewSelectorProps {
 export const ViewSelector: React.FC<ViewSelectorProps> = ({ onSelectItem }) => {
   const [viewMode, setViewMode] = useState<'dia' | 'semana' | 'mes'>('dia');
   const [currentDate, setCurrentDate] = useState(new Date());
-  const { getTatuagensForDate, getTatuagensForWeek, getTatuagensForMonth } = useAgenda();
+  const { getTatuagensForDate, getTatuagensForWeek, getTatuagensForMonth, updateTatuagem } = useAgenda();
+
+  const [selectedTatuagem, setSelectedTatuagem] = useState<Tatuagem | null>(null);
+  const [isPanelVisible, setIsPanelVisible] = useState(false);
+
+  const handleTatuagemPress = (tatuagem: Tatuagem) => {
+    setSelectedTatuagem(tatuagem);
+    setIsPanelVisible(true);
+  };
+
+  const handleClosePanel = () => {
+    setIsPanelVisible(false);
+    setSelectedTatuagem(null);
+  };
+
+  const handleSaveTatuagem = (editedTatuagem: Tatuagem) => {
+    updateTatuagem(editedTatuagem.id, editedTatuagem);
+    handleClosePanel();
+  };
 
   const getTatuagens = () => {
     switch (viewMode) {
@@ -76,6 +96,7 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({ onSelectItem }) => {
 
   return (
     <View style={styles.container}>
+      {/* View Mode Selector */}
       <View style={styles.viewModeSelector}>
         <TouchableOpacity
           style={[styles.modeButton, viewMode === 'dia' && styles.modeButtonActive]}
@@ -132,6 +153,7 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({ onSelectItem }) => {
         </TouchableOpacity>
       </View>
 
+      {/* Navigation */}
       <View style={styles.navigationContainer}>
         <TouchableOpacity onPress={goToPrevious} style={styles.navButton}>
           <MaterialCommunityIcons name="chevron-left" size={24} color={Colors.primary} />
@@ -151,13 +173,14 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({ onSelectItem }) => {
         <Text style={styles.todayButtonText}>Voltar para Hoje</Text>
       </TouchableOpacity>
 
+      {/* Tatuagens List */}
       <ScrollView style={styles.tatuagensContainer} showsVerticalScrollIndicator={false}>
         {tatuagens.length > 0 ? (
           tatuagens.map(tatuagem => (
             <TatuagemItem
               key={tatuagem.id}
               tatuagem={tatuagem}
-              onPress={onSelectItem || (() => {})}
+              onPress={() => handleTatuagemPress(tatuagem)}
             />
           ))
         ) : (
@@ -174,6 +197,14 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({ onSelectItem }) => {
           </View>
         )}
       </ScrollView>
+
+      {/* Edit Panel */}
+      <EditTatuagemPanel
+        visible={isPanelVisible}
+        onClose={handleClosePanel}
+        tatuagem={selectedTatuagem}
+        onSave={handleSaveTatuagem}
+      />
     </View>
   );
 };

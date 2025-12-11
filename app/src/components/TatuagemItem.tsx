@@ -43,29 +43,31 @@ export const TatuagemItem: React.FC<TatuagemItemProps> = ({ tatuagem, onPress })
 
       {/* Detalhes */}
       <View style={styles.detailsContainer}>
-        <Text style={styles.descricao} numberOfLines={2}>{tatuagem.descricao}</Text>
+        <View style={styles.textContainer}>
+          <Text style={styles.descricao} numberOfLines={2}>{tatuagem.descricao}</Text>
+          
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons name="calendar" size={14} color={Colors.textMuted} />
+            <Text style={styles.infoText}>{DateHelper.formatDate(tatuagem.data)} às {tatuagem.horario}</Text>
+          </View>
+          
+          {tatuagem.local && (
+            <View style={styles.infoRow}>
+              <MaterialCommunityIcons name="map-marker-outline" size={14} color={Colors.textMuted} />
+              <Text style={styles.infoText}>{tatuagem.local}</Text>
+            </View>
+          )}
+
+          {tatuagem.telefone && (
+            <View style={styles.infoRow}>
+              <MaterialCommunityIcons name="phone-outline" size={14} color={Colors.textMuted} />
+              <Text style={styles.infoText}>{tatuagem.telefone}</Text>
+            </View>
+          )}
+        </View>
         
         {tatuagem.imagem && (
           <Image source={{ uri: tatuagem.imagem }} style={styles.imagemPreview} />
-        )}
-
-        <View style={styles.infoRow}>
-          <MaterialCommunityIcons name="calendar" size={14} color={Colors.textMuted} />
-          <Text style={styles.infoText}>{DateHelper.formatDate(tatuagem.data)} às {tatuagem.horario}</Text>
-        </View>
-        
-        {tatuagem.local && (
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="map-marker-outline" size={14} color={Colors.textMuted} />
-            <Text style={styles.infoText}>{tatuagem.local}</Text>
-          </View>
-        )}
-
-        {tatuagem.telefone && (
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="phone-outline" size={14} color={Colors.textMuted} />
-            <Text style={styles.infoText}>{tatuagem.telefone}</Text>
-          </View>
         )}
       </View>
 
@@ -117,6 +119,13 @@ const styles = StyleSheet.create({
   detailsContainer: {
     paddingHorizontal: 16,
     paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  textContainer: {
+    flex: 1,
+    marginRight: 16,
   },
   descricao: {
     fontSize: 14,
@@ -124,10 +133,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   imagemPreview: {
-    width: '100%',
-    height: 150,
+    width: 80,
+    height: 80,
     borderRadius: 8,
-    marginBottom: 12,
     backgroundColor: Colors.surface,
   },
   infoRow: {
