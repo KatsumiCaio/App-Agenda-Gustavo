@@ -66,9 +66,20 @@ export const TatuagemItem: React.FC<TatuagemItemProps> = ({ tatuagem, onPress })
           )}
         </View>
         
-        {tatuagem.imagem && (
-          <Image source={{ uri: tatuagem.imagem }} style={styles.imagemPreview} />
-        )}
+        <View style={styles.imageContainer}>
+          {tatuagem.imagemModelo && (
+            <View style={styles.imageWrapper}>
+              <Text style={styles.imageLabel}>Referência</Text>
+              <Image source={{ uri: tatuagem.imagemModelo }} style={styles.imagemPreview} />
+            </View>
+          )}
+          {tatuagem.imagemFinal && (
+            <View style={styles.imageWrapper}>
+              <Text style={styles.imageLabel}>Finalizada</Text>
+              <Image source={{ uri: tatuagem.imagemFinal }} style={styles.imagemPreview} />
+            </View>
+          )}
+        </View>
       </View>
 
       {/* Footer */}
@@ -132,9 +143,22 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     marginBottom: 12,
   },
+  imageContainer: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  imageWrapper: {
+    alignItems: 'center',
+    gap: 5,
+  },
+  imageLabel: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    fontWeight: '500',
+  },
   imagemPreview: {
-    width: 80,
-    height: 80,
+    width: 70,
+    height: 70,
     borderRadius: 8,
     backgroundColor: Colors.surface,
   },

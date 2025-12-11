@@ -27,7 +27,7 @@ export const AddTatuagemScreen: React.FC = () => {
   const [local, setLocal] = useState('');
   const [valor, setValor] = useState('');
   const [observacoes, setObservacoes] = useState('');
-  const [imagem, setImagem] = useState<string | null>(null); // Novo estado para a imagem
+  const [imagemModelo, setImagemModelo] = useState<string | null>(null); // Novo estado para a imagem
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   // Função para selecionar imagem
@@ -46,7 +46,7 @@ export const AddTatuagemScreen: React.FC = () => {
     });
 
     if (!result.canceled) {
-      setImagem(result.assets[0].uri);
+      setImagemModelo(result.assets[0].uri);
     }
   };
 
@@ -68,7 +68,7 @@ export const AddTatuagemScreen: React.FC = () => {
         status: 'agendado',
         telefone: selectedCliente.telefone || undefined,
         observacoes: observacoes.trim() || undefined,
-        imagem: imagem || undefined, // Adiciona a imagem
+        imagemModelo: imagemModelo || undefined, // Adiciona a imagem
       });
 
       // Limpa os campos imediatamente após o sucesso
@@ -79,7 +79,7 @@ export const AddTatuagemScreen: React.FC = () => {
       setLocal('');
       setValor('');
       setObservacoes('');
-      setImagem(null); // Limpa a imagem
+      setImagemModelo(null); // Limpa a imagem
 
       // Exibe a mensagem de sucesso
       setShowSuccessMessage(true);
@@ -179,10 +179,10 @@ export const AddTatuagemScreen: React.FC = () => {
               <MaterialCommunityIcons name="camera-plus-outline" size={20} color={Colors.primary} />
               <Text style={styles.imagePickerButtonText}>Selecionar Imagem</Text>
             </TouchableOpacity>
-            {imagem && (
+            {imagemModelo && (
               <View style={styles.imagePreviewContainer}>
-                <Image source={{ uri: imagem }} style={styles.imagePreview} />
-                <TouchableOpacity style={styles.removeImageButton} onPress={() => setImagem(null)}>
+                <Image source={{ uri: imagemModelo }} style={styles.imagePreview} />
+                <TouchableOpacity style={styles.removeImageButton} onPress={() => setImagemModelo(null)}>
                   <MaterialCommunityIcons name="close-circle" size={24} color={Colors.danger} />
                 </TouchableOpacity>
               </View>

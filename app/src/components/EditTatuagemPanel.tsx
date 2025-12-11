@@ -35,13 +35,13 @@ const EditTatuagemPanel: React.FC<EditTatuagemPanelProps> = ({ visible, onClose,
     });
 
     if (!result.canceled && editedTatuagem) {
-      setEditedTatuagem({ ...editedTatuagem, imagem: result.assets[0].uri });
+      setEditedTatuagem({ ...editedTatuagem, imagemFinal: result.assets[0].uri });
     }
   };
   
   const removeImage = () => {
     if (editedTatuagem) {
-      setEditedTatuagem({ ...editedTatuagem, imagem: undefined });
+      setEditedTatuagem({ ...editedTatuagem, imagemFinal: undefined });
     }
   };
 
@@ -127,13 +127,21 @@ const EditTatuagemPanel: React.FC<EditTatuagemPanelProps> = ({ visible, onClose,
 
             {renderStatusSelector()}
 
-            {/* Seletor de Imagem */}
+            {/* Imagem de Referência */}
+            {editedTatuagem.imagemModelo && (
+                <View style={styles.imageContainer}>
+                    <Text style={styles.imageLabel}>Imagem de Referência</Text>
+                    <Image source={{ uri: editedTatuagem.imagemModelo }} style={styles.imagePreview} />
+                </View>
+            )}
+
+            {/* Seletor de Imagem Final */}
             {editedTatuagem.status === 'concluído' && (
               <View style={styles.imagePickerContainer}>
-                <Text style={styles.imagePickerLabel}>Foto da Tatuagem</Text>
-                {editedTatuagem.imagem ? (
+                <Text style={styles.imagePickerLabel}>Foto da Tatuagem Finalizada</Text>
+                {editedTatuagem.imagemFinal ? (
                   <View>
-                    <Image source={{ uri: editedTatuagem.imagem }} style={styles.imagePreview} />
+                    <Image source={{ uri: editedTatuagem.imagemFinal }} style={styles.imagePreview} />
                     <TouchableOpacity style={styles.removeImageButton} onPress={removeImage}>
                         <MaterialCommunityIcons name="close-circle" size={24} color={Colors.error} />
                     </TouchableOpacity>
@@ -141,7 +149,7 @@ const EditTatuagemPanel: React.FC<EditTatuagemPanelProps> = ({ visible, onClose,
                 ) : (
                   <TouchableOpacity style={styles.pickImageButton} onPress={pickImage}>
                     <MaterialCommunityIcons name="camera-plus-outline" size={22} color={Colors.primary} />
-                    <Text style={styles.pickImageButtonText}>Adicionar Foto</Text>
+                    <Text style={styles.pickImageButtonText}>Adicionar Foto Final</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -172,6 +180,8 @@ const styles = StyleSheet.create({
   statusContainer: { flexDirection: 'row', justifyContent: 'space-around', width: '100%', marginVertical: 20 },
   statusButton: { paddingVertical: 10, paddingHorizontal: 15, borderRadius: 20, borderWidth: 1 },
   statusButtonText: { fontWeight: 'bold', fontSize: 12 },
+  imageContainer: { width: '100%', alignItems: 'center', marginVertical: 10 },
+  imageLabel: { fontSize: 16, fontWeight: '600', color: Colors.textLight, marginBottom: 10 },
   imagePickerContainer: { width: '100%', alignItems: 'center', marginVertical: 20, padding: 15, backgroundColor: Colors.background, borderRadius: 8, borderWidth: 1, borderColor: Colors.border },
   imagePickerLabel: { fontSize: 16, fontWeight: '600', color: Colors.textLight, marginBottom: 15 },
   pickImageButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'transparent', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 8, borderWidth: 1, borderColor: Colors.primary },

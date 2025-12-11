@@ -17,7 +17,8 @@ export interface Tatuagem {
   status: 'agendado' | 'concluído' | 'cancelado';
   telefone?: string;
   observacoes?: string;
-  imagem?: string;
+  imagemModelo?: string;
+  imagemFinal?: string;
 }
 
 export interface ViewType {
