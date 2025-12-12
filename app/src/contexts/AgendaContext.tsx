@@ -10,6 +10,7 @@ interface AgendaContextType {
   updateTatuagem: (id: string, updates: Partial<Tatuagem>) => Promise<void>;
   deleteTatuagem: (id: string) => Promise<void>;
   loadTatuagens: () => Promise<void>;
+  reloadData: () => Promise<void>;
   addCliente: (cliente: Omit<Cliente, 'id'>) => Promise<void>;
   clearAllData: () => Promise<void>;
   getTatuagensForDate: (date: Date) => Tatuagem[];
@@ -43,6 +44,10 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const loadClientes = async () => {
     const data = await StorageService.getClientes();
     setClientes(data);
+  };
+
+  const reloadData = async () => {
+    await loadAllData();
   };
 
   const addTatuagem = async (tatuagem: Omit<Tatuagem, 'id'>) => {
@@ -132,6 +137,7 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         updateTatuagem,
         deleteTatuagem,
         loadTatuagens,
+        reloadData,
         addCliente,
         clearAllData,
         getTatuagensForDate,

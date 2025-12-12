@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAgenda } from '../contexts/AgendaContext';
 import { format } from 'date-fns';
 import { Colors, Shadows } from '../theme/colors';
+import { Layout } from '../theme/layout';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Cliente } from '../types';
 import WebDatePicker from '../components/WebDatePicker';
@@ -27,6 +28,7 @@ export const AddTatuagemScreen: React.FC = () => {
   const [horario, setHorario] = useState('10:00');
   const [local, setLocal] = useState('');
   const [valor, setValor] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [observacoes, setObservacoes] = useState('');
   const [imagemModelo, setImagemModelo] = useState<string | null>(null); // Novo estado para a imagem
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -58,10 +60,18 @@ export const AddTatuagemScreen: React.FC = () => {
 
 
   const handleAddTatuagem = async () => {
-    if (!selectedCliente || !descricao.trim() || !date || !horario || !valor) {
-      Alert.alert('❌ Erro', 'Preencha todos os campos obrigatórios, incluindo a seleção do cliente.');
+    const newErrors: Record<string, string> = {};
+    if (!selectedCliente) newErrors.cliente = 'Selecione um cliente';
+    if (!descricao.trim()) newErrors.descricao = 'Descrição é obrigatória';
+    if (!date) newErrors.data = 'Data inválida';
+    if (!horario) newErrors.horario = 'Horário inválido';
+    if (!valor || isNaN(parseFloat(valor))) newErrors.valor = 'Valor inválido';
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+    setErrors({});
 
     try {
       await addTatuagem({
@@ -152,19 +162,20 @@ export const AddTatuagemScreen: React.FC = () => {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Cliente *</Text>
-            <TouchableOpacity style={styles.inputContainer} onPress={() => setModalVisible(true)}>
+            <TouchableOpacity style={[styles.inputContainer, errors.cliente && styles.inputError]} onPress={() => setModalVisible(true)}>
               <MaterialCommunityIcons name="account-outline" style={styles.inputIcon} />
               <Text style={[styles.input, !selectedCliente && styles.placeholderText]}>
                 {selectedCliente ? selectedCliente.nome : 'Selecione um cliente'}
               </Text>
             </TouchableOpacity>
+            {errors.cliente && <Text style={styles.errorText}>{errors.cliente}</Text>}
           </View>
 
           <Text style={[styles.sectionTitle, styles.sectionTitleMargin]}>🎨 Detalhes da Tatuagem</Text>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Descrição *</Text>
-            <View style={[styles.inputContainer, styles.textAreaContainer]}>
+            <View style={[styles.inputContainer, styles.textAreaContainer, errors.descricao && styles.inputError]}>
               <MaterialCommunityIcons name="pencil-outline" style={styles.inputIcon} />
               <TextInput
                 style={[styles.input, styles.textAreaInput]}
@@ -176,6 +187,7 @@ export const AddTatuagemScreen: React.FC = () => {
                 placeholderTextColor={Colors.textMuted}
               />
             </View>
+            {errors.descricao && <Text style={styles.errorText}>{errors.descricao}</Text>}
           </View>
 
           {/* Botão de Imagem e Preview */}
@@ -211,7 +223,7 @@ export const AddTatuagemScreen: React.FC = () => {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Valor (R$) *</Text>
-            <View style={styles.inputContainer}>
+            <View style={[styles.inputContainer, errors.valor && styles.inputError]}>
               <MaterialCommunityIcons name="cash" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
@@ -222,6 +234,7 @@ export const AddTatuagemScreen: React.FC = () => {
                 placeholderTextColor={Colors.textMuted}
               />
             </View>
+            {errors.valor && <Text style={styles.errorText}>{errors.valor}</Text>}
           </View>
 
           <Text style={[styles.sectionTitle, styles.sectionTitleMargin]}>📅 Agendamento</Text>
@@ -231,13 +244,14 @@ export const AddTatuagemScreen: React.FC = () => {
             {Platform.OS === 'web' ? (
               <WebDatePicker date={date} setDate={setDate} />
             ) : (
-              <TouchableOpacity style={styles.inputContainer} onPress={() => { /* lógica para nativo aqui */ }}>
+              <TouchableOpacity style={[styles.inputContainer, errors.data && styles.inputError]} onPress={() => { /* lógica para nativo aqui */ }}>
                 <MaterialCommunityIcons name="calendar" style={styles.inputIcon} />
                 <Text style={styles.input}>
                   {format(date, 'dd/MM/yyyy')}
                 </Text>
               </TouchableOpacity>
             )}
+            {errors.data && <Text style={styles.errorText}>{errors.data}</Text>}
           </View>
 
           <View style={styles.inputGroup}>
@@ -245,13 +259,14 @@ export const AddTatuagemScreen: React.FC = () => {
             {Platform.OS === 'web' ? (
               <WebTimePicker horario={horario} setHorario={setHorario} />
             ) : (
-              <TouchableOpacity style={styles.inputContainer} onPress={() => { /* lógica para nativo aqui */ }}>
+              <TouchableOpacity style={[styles.inputContainer, errors.horario && styles.inputError]} onPress={() => { /* lógica para nativo aqui */ }}>
                 <MaterialCommunityIcons name="clock-outline" style={styles.inputIcon} />
                 <Text style={styles.input}>
                   {horario}
                 </Text>
               </TouchableOpacity>
             )}
+            {errors.horario && <Text style={styles.errorText}>{errors.horario}</Text>}
           </View>
 
           <View style={styles.inputGroup}>
@@ -369,9 +384,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.backgroundLight,
-    padding: 15,
-    borderRadius: 8,
+    padding: 14,
+    borderRadius: 10,
     justifyContent: 'center',
+    width: '100%',
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   imagePickerButtonText: {
     color: Colors.primary,
@@ -385,16 +403,19 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   imagePreview: {
-    width: '100%',
-    height: 200,
-    borderRadius: 8,
+    width: 220,
+    height: 220,
+    borderRadius: 12,
+    alignSelf: 'center',
+    backgroundColor: Colors.surface,
   },
   removeImageButton: {
     position: 'absolute',
-    top: -10,
-    right: -10,
-    backgroundColor: Colors.background,
-    borderRadius: 12,
+    top: 8,
+    right: 8,
+    backgroundColor: 'transparent',
+    borderRadius: 16,
+    padding: 2,
   },
   submitButton: {
     backgroundColor: Colors.primary,
@@ -476,6 +497,15 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 14,
     fontWeight: '600',
+  },
+  inputError: {
+    borderColor: Colors.error,
+    borderWidth: 1,
+  },
+  errorText: {
+    color: Colors.error,
+    marginTop: 6,
+    fontSize: 13,
   },
 });
 

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal, View, Image, StyleSheet, TouchableOpacity, SafeAreaView, Text } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '../theme/colors';
+import { getDisplayUri } from '../../imageStorage';
 
 interface ImageViewerModalProps {
   visible: boolean;
@@ -11,6 +12,27 @@ interface ImageViewerModalProps {
 
 export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({ visible, images, onClose }) => {
   const [currentIndex, setCurrentIndex] = React.useState(0);
+  const [displayImages, setDisplayImages] = useState<string[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    const resolveAll = async () => {
+      try {
+        const resolved = await Promise.all(images.map(async (img) => {
+          try {
+            return await getDisplayUri(img);
+          } catch (e) {
+            return '';
+          }
+        }));
+        if (mounted) setDisplayImages(resolved.filter(Boolean));
+      } catch (e) {
+        if (mounted) setDisplayImages([]);
+      }
+    };
+    resolveAll();
+    return () => { mounted = false; };
+  }, [images]);
 
   const handleNext = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -39,7 +61,7 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({ visible, ima
 
         {/* Image */}
         <View style={styles.imageContainer}>
-          <Image source={{ uri: images[currentIndex] }} style={styles.image} resizeMode="contain" />
+          <Image source={{ uri: displayImages[currentIndex] || images[currentIndex] }} style={styles.image} resizeMode="contain" />
         </View>
 
         {/* Navigation and Counter */}

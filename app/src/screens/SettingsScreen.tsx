@@ -1,8 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert, TextInput, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { deleteAllImages } from '../utils/fileHelper';
 import { useAgenda } from '../contexts/AgendaContext';
+import { StorageService } from '../services/storage';
+import { uploadImageForShared, saveTatuagemShared, saveClientesShared, getTatuagensShared, getClientesShared } from '../services/firebase';
 import { Colors, Shadows } from '../theme/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -12,7 +14,7 @@ type Nav = {
 
 export const SettingsScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
-  const { tatuagens, clearAllData } = useAgenda();
+  const { tatuagens, clearAllData, reloadData } = useAgenda();
 
   const stats = {
     total: tatuagens.length,
@@ -20,6 +22,10 @@ export const SettingsScreen: React.FC = () => {
     concluidas: tatuagens.filter(t => t.status === 'concluído').length,
     canceladas: tatuagens.filter(t => t.status === 'cancelado').length,
   };
+
+  const [syncKey, setSyncKey] = React.useState('');
+  const [isSyncing, setIsSyncing] = React.useState(false);
+  const [uploadProgress, setUploadProgress] = React.useState<{ current: number; total: number; item?: string } | null>(null);
 
   const totalValorConcluido = tatuagens
     .filter(t => t.status === 'concluído')
@@ -45,6 +51,108 @@ export const SettingsScreen: React.FC = () => {
         },
       ]
     );
+  };
+
+  const handleUploadToCloud = async () => {
+    if (!syncKey) {
+      Alert.alert('Sync Key', 'Informe a Sync Key antes de enviar.');
+      return;
+    }
+    setIsSyncing(true);
+    try {
+      const localTatuagens = await StorageService.getTatuagens();
+      const localClientes = await StorageService.getClientes();
+
+      // Upload clients (no progress tracking for clients)
+      await saveClientesShared(syncKey, localClientes || []);
+
+      // Upload tatuagens (com upload de imagens se necessário)
+      setUploadProgress({ current: 0, total: localTatuagens.length });
+      for (let i = 0; i < localTatuagens.length; i++) {
+        const t = localTatuagens[i];
+        const copy = { ...t } as any;
+        setUploadProgress({ current: i + 1, total: localTatuagens.length, item: copy.id || copy.descricao || 'item' });
+        if (copy.imagemModelo && !copy.imagemModelo.startsWith('http')) {
+          try {
+            copy.imagemModelo = await uploadImageForShared(copy.imagemModelo, syncKey);
+          } catch (e) {
+            console.warn('Falha upload imagem modelo', e);
+          }
+        }
+        if (copy.imagemFinal && !copy.imagemFinal.startsWith('http')) {
+          try {
+            copy.imagemFinal = await uploadImageForShared(copy.imagemFinal, syncKey);
+          } catch (e) {
+            console.warn('Falha upload imagem final', e);
+          }
+        }
+        await saveTatuagemShared(syncKey, copy);
+      }
+      setUploadProgress(null);
+      Alert.alert('Sucesso', 'Dados enviados para a nuvem com sucesso.');
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Erro', 'Falha ao enviar dados para a nuvem. Veja console.');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleDownloadFromCloud = async () => {
+    if (!syncKey) {
+      Alert.alert('Sync Key', 'Informe a Sync Key antes de baixar.');
+      return;
+    }
+
+    Alert.alert('Confirmar', 'Deseja substituir os dados locais pelos dados da nuvem?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Substituir', style: 'destructive', onPress: async () => {
+        setIsSyncing(true);
+        try {
+          const cloudTatuagens = await getTatuagensShared(syncKey);
+          const cloudClientes = await getClientesShared(syncKey);
+
+          // Salva diretamente no storage local. Imagens já estarão em URLs públicas.
+          await StorageService.saveTatuagens(cloudTatuagens.map(c => ({ ...c })));
+          await StorageService.saveClientes(cloudClientes.map(c => ({ ...c })));
+          // Forçar recarga via contexto
+          try { await reloadData(); } catch (e) { console.warn('reloadData falhou', e); }
+          Alert.alert('Sucesso', 'Dados baixados e salvos localmente.');
+        } catch (err) {
+          console.error(err);
+          Alert.alert('Erro', 'Falha ao baixar dados da nuvem.');
+        } finally {
+          setIsSyncing(false);
+        }
+      }}
+    ]);
+  };
+
+  const handleMergeFromCloud = async () => {
+    if (!syncKey) {
+      Alert.alert('Sync Key', 'Informe a Sync Key antes de mesclar.');
+      return;
+    }
+    setIsSyncing(true);
+    try {
+      const cloudTatuagens = await getTatuagensShared(syncKey);
+      const localTatuagens = await StorageService.getTatuagens();
+      const merged = [...localTatuagens];
+      const existingIds = new Set(localTatuagens.map(t => t.id));
+      for (const ct of cloudTatuagens) {
+        if (!existingIds.has(ct.id)) {
+          merged.push(ct as any);
+        }
+      }
+      await StorageService.saveTatuagens(merged);
+      try { await reloadData(); } catch (e) { console.warn('reloadData falhou', e); }
+      Alert.alert('Sucesso', 'Dados mesclados (apenas novos registros adicionados).');
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Erro', 'Falha ao mesclar dados da nuvem.');
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   return (
@@ -122,6 +230,40 @@ export const SettingsScreen: React.FC = () => {
             </View>
             <MaterialCommunityIcons name="chevron-right" style={styles.actionChevron} />
           </TouchableOpacity>
+
+          <View style={[styles.syncCard, { marginTop: 16 }]}> 
+            <Text style={styles.syncTitle}>🔁 Sincronização (com imagens)</Text>
+            <Text style={styles.syncHelp}>Informe uma Sync Key compartilhada entre aparelhos.</Text>
+            <TextInput
+              value={syncKey}
+              onChangeText={setSyncKey}
+              placeholder="ex: minha-chave-secreta"
+              placeholderTextColor={Colors.textMuted}
+              style={styles.syncInput}
+            />
+
+            <View style={styles.syncButtonsRow}>
+              <TouchableOpacity style={styles.syncButton} onPress={handleUploadToCloud} disabled={isSyncing}>
+                {isSyncing ? <ActivityIndicator color="white" /> : <Text style={styles.syncButtonText}>Enviar para Nuvem</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.syncButton, { backgroundColor: Colors.backgroundLight }]} onPress={handleMergeFromCloud} disabled={isSyncing}>
+                <Text style={[styles.syncButtonText, { color: Colors.textMuted }]}>Mesclar</Text>
+              </TouchableOpacity>
+            </View>
+
+              {uploadProgress && (
+                  <View style={styles.progressRow}>
+                    <ActivityIndicator color={Colors.primary} />
+                    <Text style={styles.progressText}> Enviando {uploadProgress.current} / {uploadProgress.total} {uploadProgress.item ? `- ${uploadProgress.item}` : ''}</Text>
+                  </View>
+                )}
+            
+
+            <View style={{ height: 12 }} />
+            <TouchableOpacity style={[styles.syncButton, { backgroundColor: Colors.error }]} onPress={handleDownloadFromCloud} disabled={isSyncing}>
+              <Text style={styles.syncButtonText}>Substituir dados locais</Text>
+            </TouchableOpacity>
+          </View>
 
           <Text style={[styles.sectionTitle, styles.sectionTitleMargin]}>ℹ️ Sobre o App</Text>
 
@@ -308,6 +450,55 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     textAlign: 'center',
     marginBottom: 20,
+  },
+  syncCard: {
+    backgroundColor: Colors.backgroundLight,
+    padding: 16,
+    borderRadius: 10,
+    ...Shadows.medium,
+  },
+  syncTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.textLight,
+    marginBottom: 6,
+  },
+  syncHelp: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    marginBottom: 10,
+  },
+  syncInput: {
+    backgroundColor: Colors.background,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 44,
+    color: Colors.textLight,
+    marginBottom: 12,
+  },
+  syncButtonsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  syncButton: {
+    flex: 1,
+    backgroundColor: Colors.primary,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  syncButtonText: {
+    color: Colors.textLight,
+    fontWeight: '700',
+  },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  progressText: {
+    color: Colors.textLight,
+    marginLeft: 8,
   },
 });
 

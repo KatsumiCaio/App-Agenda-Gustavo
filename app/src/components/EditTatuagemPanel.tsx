@@ -3,6 +3,7 @@ import { View, Text, Modal, StyleSheet, TextInput, ScrollView, TouchableOpacity,
 import { Tatuagem } from '../types';
 import { Colors, Shadows } from '../theme/colors';
 import * as ImagePicker from 'expo-image-picker';
+import { saveImage, deleteImage, debugSaveImage, getDisplayUri } from '../../imageStorage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 interface EditTatuagemPanelProps {
   visible: boolean;
@@ -13,12 +14,32 @@ interface EditTatuagemPanelProps {
 
 const EditTatuagemPanel: React.FC<EditTatuagemPanelProps> = ({ visible, onClose, onSave, tatuagem }) => {
   const [editedTatuagem, setEditedTatuagem] = useState<Tatuagem | null>(null);
+  const [previewImagemFinal, setPreviewImagemFinal] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (tatuagem) {
       setEditedTatuagem(JSON.parse(JSON.stringify(tatuagem)));
     }
   }, [tatuagem]);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadPreview = async () => {
+      if (editedTatuagem && editedTatuagem.imagemFinal) {
+        try {
+          const uri = await getDisplayUri(editedTatuagem.imagemFinal);
+          if (mounted) setPreviewImagemFinal(uri);
+        } catch (err) {
+          console.warn('Falha ao gerar preview da imagem:', err);
+          if (mounted) setPreviewImagemFinal(undefined);
+        }
+      } else {
+        if (mounted) setPreviewImagemFinal(undefined);
+      }
+    };
+    loadPreview();
+    return () => { mounted = false; };
+  }, [editedTatuagem && editedTatuagem.imagemFinal]);
 
   const pickImage = async () => {
     if (Platform.OS !== 'web') {
@@ -37,9 +58,14 @@ const EditTatuagemPanel: React.FC<EditTatuagemPanelProps> = ({ visible, onClose,
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
-      const permanentUri = await saveImagePermanently(result.assets[0].uri);
-      if (editedTatuagem) {
-        setEditedTatuagem({ ...editedTatuagem, imagemFinal: permanentUri });
+      try {
+        const permanentUri = await debugSaveImage(result.assets[0].uri);
+        if (editedTatuagem) {
+          setEditedTatuagem({ ...editedTatuagem, imagemFinal: permanentUri });
+        }
+      } catch (err) {
+        console.error('pickImage -> erro ao salvar:', err);
+        Alert.alert('Erro ao salvar imagem', String(err));
       }
     }
   };
@@ -48,6 +74,7 @@ const EditTatuagemPanel: React.FC<EditTatuagemPanelProps> = ({ visible, onClose,
     if (editedTatuagem && editedTatuagem.imagemFinal) {
       await deleteImage(editedTatuagem.imagemFinal);
       setEditedTatuagem({ ...editedTatuagem, imagemFinal: undefined });
+      setPreviewImagemFinal(undefined);
     }
   };
 
@@ -147,7 +174,7 @@ const EditTatuagemPanel: React.FC<EditTatuagemPanelProps> = ({ visible, onClose,
                 <Text style={styles.imagePickerLabel}>Foto da Tatuagem Finalizada</Text>
                 {editedTatuagem.imagemFinal ? (
                   <View>
-                    <Image source={{ uri: editedTatuagem.imagemFinal }} style={styles.imagePreview} />
+                    <Image source={{ uri: previewImagemFinal || editedTatuagem.imagemFinal }} style={styles.imagePreview} />
                     <TouchableOpacity style={styles.removeImageButton} onPress={removeImage}>
                         <MaterialCommunityIcons name="close-circle" size={24} color={Colors.error} />
                     </TouchableOpacity>
@@ -190,10 +217,10 @@ const styles = StyleSheet.create({
   imageLabel: { fontSize: 16, fontWeight: '600', color: Colors.textLight, marginBottom: 10 },
   imagePickerContainer: { width: '100%', alignItems: 'center', marginVertical: 20, padding: 15, backgroundColor: Colors.background, borderRadius: 8, borderWidth: 1, borderColor: Colors.border },
   imagePickerLabel: { fontSize: 16, fontWeight: '600', color: Colors.textLight, marginBottom: 15 },
-  pickImageButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'transparent', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 8, borderWidth: 1, borderColor: Colors.primary },
+  pickImageButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'transparent', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 10, borderWidth: 1, borderColor: Colors.primary, width: '100%', justifyContent: 'center' },
   pickImageButtonText: { color: Colors.primary, marginLeft: 10, fontWeight: 'bold' },
-  imagePreview: { width: 150, height: 150, borderRadius: 8, marginBottom: 10 },
-  removeImageButton: { position: 'absolute', top: -10, right: -10, backgroundColor: Colors.backgroundLight, borderRadius: 12 },
+  imagePreview: { width: 220, height: 220, borderRadius: 12, marginBottom: 10, alignSelf: 'center', backgroundColor: Colors.surface },
+  removeImageButton: { position: 'absolute', top: 8, right: 8, backgroundColor: 'transparent', borderRadius: 16, padding: 2 },
   buttonContainer: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 30 },
   actionButton: { borderRadius: 8, paddingVertical: 14, flex: 1, alignItems: 'center', ...Shadows.small },
   actionButtonText: { color: Colors.textLight, fontWeight: 'bold', fontSize: 16 },

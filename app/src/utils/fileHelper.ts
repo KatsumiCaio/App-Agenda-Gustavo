@@ -1,4 +1,6 @@
 import * as FileSystem from 'expo-file-system';
+import { Platform } from 'react-native';
+import { saveImage as saveImageStorage } from '../../imageStorage';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -18,19 +20,27 @@ const ensureDirExists = async () => {
  * @returns O URI permanente do arquivo salvo.
  */
 export const saveImagePermanently = async (tempUri: string): Promise<string> => {
+  // No web, delegamos para imageStorage.saveImage que grava em localStorage e retorna uma URI do tipo localstorage:...
+  if (Platform.OS === 'web') {
+    try {
+      const saved = await saveImageStorage(tempUri);
+      return saved;
+    } catch (err) {
+      console.error('Erro ao salvar imagem no web via imageStorage:', err);
+      throw err;
+    }
+  }
+
   await ensureDirExists();
-  const filename = `${uuidv4()}.jpg`; // Gera um nome de arquivo único
+  const filename = `${uuidv4()}.jpg`;
   const permanentUri = `${imageDirectory}${filename}`;
-  
+
   try {
-    await FileSystem.copyAsync({
-      from: tempUri,
-      to: permanentUri,
-    });
+    await FileSystem.copyAsync({ from: tempUri, to: permanentUri });
     return permanentUri;
   } catch (error) {
-    console.error("Erro ao salvar a imagem:", error);
-    throw error; // Lança o erro para ser tratado no chamador
+    console.error('Erro ao salvar a imagem:', error);
+    throw error;
   }
 };
 

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Tatuagem } from '../types';
 import { DateHelper } from '../utils/dateHelper';
 import { Colors, Shadows } from '../theme/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { getDisplayUri } from '../../imageStorage';
 
 interface TatuagemItemProps {
   tatuagem: Tatuagem;
@@ -11,6 +12,38 @@ interface TatuagemItemProps {
 }
 
 export const TatuagemItem: React.FC<TatuagemItemProps> = ({ tatuagem, onPress }) => {
+  const [displayModelo, setDisplayModelo] = useState<string | undefined>(undefined);
+  const [displayFinal, setDisplayFinal] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    let mounted = true;
+    const resolveUris = async () => {
+      if (tatuagem.imagemModelo) {
+        try {
+          const u = await getDisplayUri(tatuagem.imagemModelo);
+          if (mounted) setDisplayModelo(u);
+        } catch (e) {
+          if (mounted) setDisplayModelo(undefined);
+        }
+      } else if (mounted) {
+        setDisplayModelo(undefined);
+      }
+
+      if (tatuagem.imagemFinal) {
+        try {
+          const u = await getDisplayUri(tatuagem.imagemFinal);
+          if (mounted) setDisplayFinal(u);
+        } catch (e) {
+          if (mounted) setDisplayFinal(undefined);
+        }
+      } else if (mounted) {
+        setDisplayFinal(undefined);
+      }
+    };
+    resolveUris();
+    return () => { mounted = false; };
+  }, [tatuagem.imagemModelo, tatuagem.imagemFinal]);
+
   const getStatus = () => {
     switch (tatuagem.status) {
       case 'agendado':
@@ -67,16 +100,16 @@ export const TatuagemItem: React.FC<TatuagemItemProps> = ({ tatuagem, onPress })
         </View>
         
         <View style={styles.imageContainer}>
-          {tatuagem.imagemModelo && (
+          {displayModelo && (
             <View style={styles.imageWrapper}>
               <Text style={styles.imageLabel}>Referência</Text>
-              <Image source={{ uri: tatuagem.imagemModelo }} style={styles.imagemPreview} />
+              <Image source={{ uri: displayModelo }} style={styles.imagemPreview} />
             </View>
           )}
-          {tatuagem.imagemFinal && (
+          {displayFinal && (
             <View style={styles.imageWrapper}>
               <Text style={styles.imageLabel}>Finalizada</Text>
-              <Image source={{ uri: tatuagem.imagemFinal }} style={styles.imagemPreview} />
+              <Image source={{ uri: displayFinal }} style={styles.imagemPreview} />
             </View>
           )}
         </View>
@@ -157,10 +190,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   imagemPreview: {
-    width: 70,
-    height: 70,
+    width: 80,
+    height: 80,
     borderRadius: 8,
-    backgroundColor: Colors.surface,
+    alignSelf: 'center',
+    backgroundColor: 'transparent',
   },
   infoRow: {
     flexDirection: 'row',
