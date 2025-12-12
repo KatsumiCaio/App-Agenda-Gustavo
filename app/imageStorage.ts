@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 // Diretório onde as imagens das tatuagens serão salvas permanentemente
 export const imagesDir = FileSystem.documentDirectory + 'tatuagens/';

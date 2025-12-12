@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { deleteAllImages } from '../utils/fileHelper';
 import { useAgenda } from '../contexts/AgendaContext';
 import { Colors, Shadows } from '../theme/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -38,7 +39,8 @@ export const SettingsScreen: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             await clearAllData();
-            Alert.alert('Sucesso', 'Todos os dados foram apagados.');
+            await deleteAllImages();
+            Alert.alert('Sucesso', 'Todos os dados e imagens foram apagados.');
           },
         },
       ]

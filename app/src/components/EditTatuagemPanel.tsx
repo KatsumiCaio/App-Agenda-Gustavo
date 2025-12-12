@@ -4,8 +4,46 @@ import { Tatuagem } from '../types';
 import { Colors, Shadows } from '../theme/colors';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { saveImagePermanently, deleteImage } from '../utils/fileHelper';
-...
+interface EditTatuagemPanelProps {
+  visible: boolean;
+  onClose: () => void;
+  onSave: (tatuagem: Tatuagem) => void;
+  tatuagem: Tatuagem | null;
+}
+
+const EditTatuagemPanel: React.FC<EditTatuagemPanelProps> = ({ visible, onClose, onSave, tatuagem }) => {
+  const [editedTatuagem, setEditedTatuagem] = useState<Tatuagem | null>(null);
+
+  useEffect(() => {
+    if (tatuagem) {
+      setEditedTatuagem(JSON.parse(JSON.stringify(tatuagem)));
+    }
+  }, [tatuagem]);
+
+  const pickImage = async () => {
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permissão necessária', 'É necessário permitir o acesso à galeria para adicionar uma imagem.');
+        return;
+      }
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const permanentUri = await saveImagePermanently(result.assets[0].uri);
+      if (editedTatuagem) {
+        setEditedTatuagem({ ...editedTatuagem, imagemFinal: permanentUri });
+      }
+    }
+  };
+
   const removeImage = async () => {
     if (editedTatuagem && editedTatuagem.imagemFinal) {
       await deleteImage(editedTatuagem.imagemFinal);

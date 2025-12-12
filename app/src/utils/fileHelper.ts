@@ -46,3 +46,15 @@ export const deleteImage = async (uri: string): Promise<void> => {
     // Não lançamos o erro para não impedir a continuação da execução
   }
 };
+
+/**
+ * Deleta todas as imagens salvas no diretório de imagens.
+ */
+export const deleteAllImages = async (): Promise<void> => {
+  try {
+    await FileSystem.deleteAsync(imageDirectory, { idempotent: true });
+    await ensureDirExists(); // Recria o diretório para uso futuro
+  } catch (error) {
+    console.error("Erro ao deletar o diretório de imagens:", error);
+  }
+};
