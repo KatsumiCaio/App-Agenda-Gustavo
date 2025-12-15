@@ -12,13 +12,15 @@ import WebTimePicker from '../components/WebTimePicker';
 import { saveImagePermanently } from '../utils/fileHelper';
 import * as ImagePicker from 'expo-image-picker';
 
+import { saveTatuagemCloud } from '../services/firebase';
+
 type Nav = {
   navigate: (value: string) => void;
 }
 
 export const AddTatuagemScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
-  const { addTatuagem, clientes } = useAgenda();
+  const { clientes } = useAgenda();
 
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
   const [isModalVisible, setModalVisible] = useState(false);
@@ -74,7 +76,7 @@ export const AddTatuagemScreen: React.FC = () => {
     setErrors({});
 
     try {
-      await addTatuagem({
+      await saveTatuagemCloud({
         cliente: selectedCliente.nome,
         descricao: descricao.trim(),
         data: format(date, 'yyyy-MM-dd'),
@@ -104,7 +106,7 @@ export const AddTatuagemScreen: React.FC = () => {
       }, 3000); // Esconde a mensagem após 3 segundos
 
     } catch (error) {
-      Alert.alert('❌ Erro', 'Falha ao agendar tatuagem');
+      Alert.alert('❌ Erro', 'Falha ao agendar tatuagem na nuvem.');
     }
   };
 

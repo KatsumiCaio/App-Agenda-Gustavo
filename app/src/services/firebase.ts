@@ -1,9 +1,9 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore, enableIndexedDbPersistence, collection, addDoc } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL, listAll } from 'firebase/storage';
-import { query, where, getDocs, collection as collectionRef, setDoc, doc, getDoc } from 'firebase/firestore';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import 'firebase/compat/firestore';
+import 'firebase/compat/storage';
 import { v4 as uuidv4 } from 'uuid';
+import { Tatuagem } from '../types';
 
 // Substitua os valores abaixo pelas suas credenciais do Firebase
 const firebaseConfig = {
@@ -15,14 +15,18 @@ const firebaseConfig = {
   appId: 'YOUR_APP_ID',
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+// Use initializeApp from the compat namespace
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+export const auth = firebase.auth();
+export const db = firebase.firestore();
+export const storage = firebase.storage();
 
 // Habilita persistência IndexedDB no web (não aplicável em react-native)
 if (typeof window !== 'undefined') {
-  enableIndexedDbPersistence(db).catch((err) => {
+  db.enablePersistence().catch((err) => {
     // Falhas de persistência podem ocorrer (multi-tab ou navegador incompatível)
     console.warn('IndexedDB persistence não habilitada:', err?.code || err);
   });
@@ -41,10 +45,10 @@ export async function uploadImageForUser(uri: string, uid?: string): Promise<str
   const response = await fetch(uri);
   const blob = await response.blob();
   const filename = `${uuidv4()}.jpg`;
-  const storageRef = ref(storage, `users/${userId}/images/${filename}`);
+  const storageRef = storage.ref(`users/${userId}/images/${filename}`);
 
-  await uploadBytes(storageRef, blob);
-  const url = await getDownloadURL(storageRef);
+  await storageRef.put(blob);
+  const url = await storageRef.getDownloadURL();
   return url;
 }
 
@@ -57,17 +61,17 @@ export async function uploadImageForShared(uri: string, syncKey: string): Promis
   const response = await fetch(uri);
   const blob = await response.blob();
   const filename = `${uuidv4()}.jpg`;
-  const storageRef = ref(storage, `shared/${syncKey}/images/${filename}`);
-  await uploadBytes(storageRef, blob);
-  return await getDownloadURL(storageRef);
+  const storageRef = storage.ref(`shared/${syncKey}/images/${filename}`);
+  await storageRef.put(blob);
+  return await storageRef.getDownloadURL();
 }
 
 /**
  * Salva um documento de tatuagem na coleção compartilhada `shared/{syncKey}/tatuagens`.
  */
-export async function saveTatuagemShared(syncKey: string, tatuagem: any): Promise<string> {
-  const col = collectionRef(db, 'shared', syncKey, 'tatuagens');
-  const docRef = await addDoc(col, { ...tatuagem, createdAt: new Date().toISOString() });
+export async function saveTatuagemShared(syncKey: string, tatuagem: Partial<Tatuagem>): Promise<string> {
+  const col = db.collection('shared').doc(syncKey).collection('tatuagens');
+  const docRef = await col.add({ ...tatuagem, createdAt: new Date().toISOString() });
   return docRef.id;
 }
 
@@ -75,8 +79,8 @@ export async function saveTatuagemShared(syncKey: string, tatuagem: any): Promis
  * Busca todas as tatuagens compartilhadas para uma syncKey.
  */
 export async function getTatuagensShared(syncKey: string): Promise<any[]> {
-  const col = collectionRef(db, 'shared', syncKey, 'tatuagens');
-  const snap = await getDocs(col);
+  const col = db.collection('shared').doc(syncKey).collection('tatuagens');
+  const snap = await col.get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
@@ -84,20 +88,22 @@ export async function getTatuagensShared(syncKey: string): Promise<any[]> {
  * Salva clientes na coleção compartilhada `shared/{syncKey}/clientes`.
  */
 export async function saveClientesShared(syncKey: string, clientes: any[]): Promise<void> {
-  const col = collectionRef(db, 'shared', syncKey, 'clientes');
-  // Escreve cada cliente como doc com id próprio (se tiver) ou gerado
+  const batch = db.batch();
+  const col = db.collection('shared').doc(syncKey).collection('clientes');
   for (const c of clientes) {
     const id = c.id || uuidv4();
-    await setDoc(doc(col, id), { ...c, createdAt: new Date().toISOString() });
+    const docRef = col.doc(id);
+    batch.set(docRef, { ...c, createdAt: new Date().toISOString() });
   }
+  await batch.commit();
 }
 
 /**
  * Busca clientes compartilhados
  */
 export async function getClientesShared(syncKey: string): Promise<any[]> {
-  const col = collectionRef(db, 'shared', syncKey, 'clientes');
-  const snap = await getDocs(col);
+  const col = db.collection('shared').doc(syncKey).collection('clientes');
+  const snap = await col.get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
@@ -105,12 +111,39 @@ export async function getClientesShared(syncKey: string): Promise<any[]> {
  * Salva um documento de tatuagem na coleção do usuário.
  * Retorna o id do documento criado.
  */
-export async function saveTatuagemDoc(uid: string, tatuagem: any): Promise<string> {
-  const col = collection(db, 'users', uid, 'tatuagens');
-  const docRef = await addDoc(col, {
+export async function saveTatuagemDoc(uid: string, tatuagem: Partial<Tatuagem>): Promise<string> {
+  const col = db.collection('users').doc(uid).collection('tatuagens');
+  const docRef = await col.add({
     ...tatuagem,
     createdAt: new Date().toISOString(),
   });
+  return docRef.id;
+}
+
+/**
+ * Combina o upload de imagem e a criação de um documento de tatuagem no Firestore.
+ * A imagem (se existir) é enviada para o Storage e a URL é salva no documento.
+ * Retorna o ID do novo documento.
+ */
+export async function saveTatuagemCloud(tatuagem: Partial<Tatuagem>): Promise<string> {
+  if (!auth.currentUser) {
+    throw new Error('Usuário não autenticado. Não é possível salvar a tatuagem.');
+  }
+
+  // Se uma nova imagem de modelo foi fornecida como uma URI local, faça o upload.
+  let uploadedImageUrl = tatuagem.imagemModelo || null;
+  if (tatuagem.imagemModelo && !tatuagem.imagemModelo.startsWith('http')) {
+    uploadedImageUrl = await uploadImageForUser(tatuagem.imagemModelo, auth.currentUser.uid);
+  }
+
+  const tatuagemData = {
+    ...tatuagem,
+    imagemModelo: uploadedImageUrl,
+    createdAt: new Date().toISOString(),
+  };
+
+  const collectionRef = db.collection('users').doc(auth.currentUser.uid).collection('tatuagens');
+  const docRef = await collectionRef.add(tatuagemData);
   return docRef.id;
 }
 
