@@ -12,16 +12,19 @@ import { Tatuagem } from '../types';
 type Props = NativeStackScreenProps<RootStackParamList, 'HistoricoTrabalhos'>;
 
 const HistoricoTrabalhosScreen: React.FC<Props> = ({ route }) => {
-  const { clienteNome } = route.params;
+  // O parâmetro clienteNome agora é opcional
+  const clienteNome = route.params?.clienteNome;
   const { tatuagens } = useAgenda();
 
   const [isViewerVisible, setViewerVisible] = useState(false);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
 
-  // Filtra as tatuagens para o cliente específico e ordena pela data mais recente
-  const trabalhosDoCliente = [...tatuagens]
-    .filter(t => t.cliente === clienteNome)
-    .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+  // Filtra as tatuagens se um cliente foi especificado, senão, mostra todas
+  const trabalhosDoCliente = (
+    clienteNome 
+      ? [...tatuagens].filter(t => t.cliente === clienteNome) 
+      : [...tatuagens]
+  ).sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
 
   const handleImagePress = (tatuagem: Tatuagem) => {
     const imagesToShow = [tatuagem.imagemModelo, tatuagem.imagemFinal].filter(img => !!img) as string[];
@@ -45,15 +48,20 @@ const HistoricoTrabalhosScreen: React.FC<Props> = ({ route }) => {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text style={styles.title}>Histórico de</Text>
-            <Text style={styles.clientName}>{clienteNome}</Text>
+            <Text style={styles.title}>{clienteNome ? 'Histórico de' : 'Histórico Geral'}</Text>
+            {clienteNome && <Text style={styles.clientName}>{clienteNome}</Text>}
           </View>
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <MaterialCommunityIcons name="clipboard-text-off-outline" style={styles.emptyIcon} />
             <Text style={styles.emptyText}>Nenhum trabalho encontrado</Text>
-            <Text style={styles.emptySubtext}>Este cliente ainda não possui trabalhos registrados.</Text>
+            <Text style={styles.emptySubtext}>
+              {clienteNome 
+                ? 'Este cliente ainda não possui trabalhos registrados.'
+                : 'Ainda não há trabalhos registrados no aplicativo.'
+              }
+            </Text>
           </View>
         }
       />

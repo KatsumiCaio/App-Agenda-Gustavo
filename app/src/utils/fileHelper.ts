@@ -1,6 +1,6 @@
 import * as FileSystem from 'expo-file-system';
 import { Platform } from 'react-native';
-import { saveImage as saveImageStorage } from '../../imageStorage';
+import { saveImage as saveImageStorage, clearAllImages as clearAllImagesWeb } from '../../imageStorage';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -58,9 +58,16 @@ export const deleteImage = async (uri: string): Promise<void> => {
 };
 
 /**
- * Deleta todas as imagens salvas no diretório de imagens.
+ * Deleta todas as imagens salvas.
+ * No nativo, deleta o diretório de imagens.
+ * No web, limpa as imagens do localStorage.
  */
 export const deleteAllImages = async (): Promise<void> => {
+  if (Platform.OS === 'web') {
+    await clearAllImagesWeb();
+    return;
+  }
+
   try {
     await FileSystem.deleteAsync(imageDirectory, { idempotent: true });
     await ensureDirExists(); // Recria o diretório para uso futuro

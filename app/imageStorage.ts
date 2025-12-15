@@ -120,6 +120,25 @@ export const debugSaveImage = async (uri: string) => {
   }
 };
 
+// Deleta todas as imagens do localStorage (apenas para web)
+export const clearAllImages = async (): Promise<void> => {
+  if (!isWeb) return;
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('tatuagens:')) {
+        keysToRemove.push(key);
+      }
+    }
+    for (const key of keysToRemove) {
+      localStorage.removeItem(key);
+    }
+  } catch (err) {
+    console.warn('Erro ao limpar imagens do localStorage:', err);
+  }
+};
+
 // Retorna uma URI utilizável em <Image /> (converte localstorage:... para data:base64)
 export const getDisplayUri = async (uri: string): Promise<string> => {
   if (!uri) return '';

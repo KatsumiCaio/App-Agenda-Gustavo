@@ -17,7 +17,7 @@ export type RootStackParamList = {
   AddTatuagem: undefined;
   CadastroCliente: undefined;
   ListaClientes: undefined; // Nova rota para a lista de clientes
-  HistoricoTrabalhos: { clienteNome: string }; // Rota de histórico agora espera um parâmetro
+  HistoricoTrabalhos: { clienteNome?: string }; // Rota de histórico com parâmetro opcional
   Settings: undefined;
 };
 

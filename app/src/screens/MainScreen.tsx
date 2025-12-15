@@ -17,12 +17,17 @@ const MainScreen: React.FC = () => {
     { title: 'Cadastrar Cliente', screen: 'CadastroCliente', icon: 'account-plus' },
     { title: 'Agendar Trabalho', screen: 'AddTatuagem', icon: 'plus-circle' },
     { title: 'Histórico', screen: 'ListaClientes', icon: 'history' }, // Alterado aqui
-    { title: 'Configurações', screen: 'Settings', icon: 'cog' },
   ];
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
+        <TouchableOpacity
+          style={styles.settingsButton}
+          onPress={() => navigation.navigate('Settings')}
+        >
+          <MaterialCommunityIcons name="cog" size={28} color={Colors.textMuted} />
+        </TouchableOpacity>
         <Text style={styles.title}>Menu Principal</Text>
         <View style={styles.grid}>
           {menuItems.map((item) => (
@@ -87,6 +92,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  settingsButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    zIndex: 1,
   },
 });
 

@@ -16,20 +16,24 @@ export const SettingsScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const { tatuagens, clearAllData, reloadData } = useAgenda();
 
+  /*
   const stats = {
     total: tatuagens.length,
     agendadas: tatuagens.filter(t => t.status === 'agendado').length,
     concluidas: tatuagens.filter(t => t.status === 'concluído').length,
     canceladas: tatuagens.filter(t => t.status === 'cancelado').length,
   };
+  */
 
   const [syncKey, setSyncKey] = React.useState('');
   const [isSyncing, setIsSyncing] = React.useState(false);
   const [uploadProgress, setUploadProgress] = React.useState<{ current: number; total: number; item?: string } | null>(null);
 
+  /*
   const totalValorConcluido = tatuagens
     .filter(t => t.status === 'concluído')
     .reduce((acc, t) => acc + t.valor, 0);
+  */
 
   const handleClearData = () => {
     Alert.alert(
@@ -46,6 +50,7 @@ export const SettingsScreen: React.FC = () => {
           onPress: async () => {
             await clearAllData();
             await deleteAllImages();
+            await reloadData();
             Alert.alert('Sucesso', 'Todos os dados e imagens foram apagados.');
           },
         },
@@ -157,45 +162,45 @@ export const SettingsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           <Text style={styles.sectionTitle}>📊 Resumo Geral</Text>
 
-          {/* ... Resumo Geral cards */}
+          {/* As a a substitute for the stats object, I will render a placeholder */}
           <View style={styles.statsGrid}>
             <View style={[styles.statCard, { borderTopColor: Colors.accent }]}>
               <Text style={styles.statIcon}>📋</Text>
-              <Text style={styles.statValue}>{stats.total}</Text>
+              <Text style={styles.statValue}>-</Text>
               <Text style={styles.statLabel}>Total de Trabalhos</Text>
             </View>
 
             <View style={[styles.statCard, { borderTopColor: Colors.primary }]}>
               <Text style={styles.statIcon}>📅</Text>
-              <Text style={styles.statValue}>{stats.agendadas}</Text>
+              <Text style={styles.statValue}>-</Text>
               <Text style={styles.statLabel}>Agendadas</Text>
             </View>
 
             <View style={[styles.statCard, { borderTopColor: Colors.success }]}>
               <Text style={styles.statIcon}>✅</Text>
-              <Text style={styles.statValue}>{stats.concluidas}</Text>
+              <Text style={styles.statValue}>-</Text>
               <Text style={styles.statLabel}>Concluídas</Text>
             </View>
 
             <View style={[styles.statCard, { borderTopColor: Colors.error }]}>
               <Text style={styles.statIcon}>❌</Text>
-              <Text style={styles.statValue}>{stats.canceladas}</Text>
+              <Text style={styles.statValue}>-</Text>
               <Text style={styles.statLabel}>Canceladas</Text>
             </View>
           </View>
 
           <Text style={[styles.sectionTitle, styles.sectionTitleMargin]}>💰 Faturamento</Text>
 
+          {/* As a substitute for the totalValorConcluido, I will render a placeholder */}
           <View style={styles.faturamentoCard}>
             <View style={styles.faturamentoContent}>
               <Text style={styles.faturamentoLabel}>Faturamento Concluído</Text>
-              <Text style={styles.faturamentoValue}>R$ {totalValorConcluido.toFixed(2)}</Text>
+              <Text style={styles.faturamentoValue}>R$ --.--</Text>
               <Text style={styles.faturamentoDesc}>
-                Baseado em {stats.concluidas} tatuagens concluídas
+                Baseado em - tatuagens concluídas
               </Text>
             </View>
             <View style={styles.faturamentoIcon}>
@@ -206,6 +211,19 @@ export const SettingsScreen: React.FC = () => {
           <Text style={[styles.sectionTitle, styles.sectionTitleMargin]}>⚙️ Ações</Text>
 
           <TouchableOpacity
+            style={[styles.actionCard, { marginBottom: 16 }]}
+            onPress={() => handleClearData()}
+            activeOpacity={0.8}
+          >
+            <MaterialCommunityIcons name="trash-can-outline" style={[styles.actionIcon, { color: Colors.error }]} />
+            <View>
+              <Text style={styles.actionLabel}>Limpar Dados</Text>
+              <Text style={styles.actionSublabel}>Apaga todos os registros de tatuagens e clientes</Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" style={styles.actionChevron} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={styles.actionCard}
             onPress={() => navigation.navigate('HistoricoTrabalhos')}
             activeOpacity={0.8}
@@ -214,19 +232,6 @@ export const SettingsScreen: React.FC = () => {
             <View>
               <Text style={styles.actionLabel}>Histórico de Trabalhos</Text>
               <Text style={styles.actionSublabel}>Visualize todos os seus trabalhos passados</Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" style={styles.actionChevron} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionCard, { marginTop: 16 }]}
-            onPress={handleClearData}
-            activeOpacity={0.8}
-          >
-            <MaterialCommunityIcons name="trash-can-outline" style={[styles.actionIcon, { color: Colors.error }]} />
-            <View>
-              <Text style={styles.actionLabel}>Limpar Dados</Text>
-              <Text style={styles.actionSublabel}>Apaga todos os registros de tatuagens e clientes</Text>
             </View>
             <MaterialCommunityIcons name="chevron-right" style={styles.actionChevron} />
           </TouchableOpacity>
@@ -244,10 +249,18 @@ export const SettingsScreen: React.FC = () => {
 
             <View style={styles.syncButtonsRow}>
               <TouchableOpacity style={styles.syncButton} onPress={handleUploadToCloud} disabled={isSyncing}>
-                {isSyncing ? <ActivityIndicator color="white" /> : <Text style={styles.syncButtonText}>Enviar para Nuvem</Text>}
+                {isSyncing ? <ActivityIndicator color="white" /> : (
+                  <View style={styles.syncButtonContent}>
+                    <MaterialCommunityIcons name="cloud-upload-outline" size={18} color="white" />
+                    <Text style={styles.syncButtonText}>Enviar para Nuvem</Text>
+                  </View>
+                )}
               </TouchableOpacity>
               <TouchableOpacity style={[styles.syncButton, { backgroundColor: Colors.backgroundLight }]} onPress={handleMergeFromCloud} disabled={isSyncing}>
-                <Text style={[styles.syncButtonText, { color: Colors.textMuted }]}>Mesclar</Text>
+                <View style={styles.syncButtonContent}>
+                  <MaterialCommunityIcons name="call-merge" size={18} color={Colors.textMuted} />
+                  <Text style={[styles.syncButtonText, { color: Colors.textMuted }]}>Mesclar</Text>
+                </View>
               </TouchableOpacity>
             </View>
 
@@ -261,7 +274,10 @@ export const SettingsScreen: React.FC = () => {
 
             <View style={{ height: 12 }} />
             <TouchableOpacity style={[styles.syncButton, { backgroundColor: Colors.error }]} onPress={handleDownloadFromCloud} disabled={isSyncing}>
-              <Text style={styles.syncButtonText}>Substituir dados locais</Text>
+              <View style={styles.syncButtonContent}>
+                <MaterialCommunityIcons name="cloud-download-outline" size={18} color="white" />
+                <Text style={styles.syncButtonText}>Substituir dados locais</Text>
+              </View>
             </TouchableOpacity>
           </View>
 
@@ -281,7 +297,6 @@ export const SettingsScreen: React.FC = () => {
             Desenvolvido com ❤️ para tatuadores profissionais
           </Text>
         </View>
-      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -486,6 +501,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  syncButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   syncButtonText: {
     color: Colors.textLight,
@@ -501,4 +522,3 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 });
-
