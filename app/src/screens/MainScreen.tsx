@@ -17,6 +17,7 @@ const MainScreen: React.FC = () => {
     { title: 'Cadastrar Cliente', screen: 'CadastroCliente', icon: 'account-plus' },
     { title: 'Agendar Trabalho', screen: 'AddTatuagem', icon: 'plus-circle' },
     { title: 'Histórico', screen: 'ListaClientes', icon: 'history' }, // Alterado aqui
+    { title: 'Configurações', screen: 'Settings', icon: 'cog' },
   ];
 
   return (
