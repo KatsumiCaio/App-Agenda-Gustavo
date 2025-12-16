@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert, TextInput, ActivityIndicator, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { deleteAllImages } from '../utils/fileHelper';
 import { useAgenda } from '../contexts/AgendaContext';
@@ -27,6 +27,7 @@ export const SettingsScreen: React.FC = () => {
 
   const [syncKey, setSyncKey] = React.useState('');
   const [isSyncing, setIsSyncing] = React.useState(false);
+  const [isClearing, setIsClearing] = React.useState(false);
   const [uploadProgress, setUploadProgress] = React.useState<{ current: number; total: number; item?: string } | null>(null);
 
   /*
@@ -36,9 +37,32 @@ export const SettingsScreen: React.FC = () => {
   */
 
   const handleClearData = () => {
+    console.log('handleClearData called');
+    const message = 'Você tem certeza que deseja apagar todos os dados? Esta ação não pode ser desfeita.';
+
+    if (Platform.OS === 'web') {
+      const ok = window.confirm(message);
+      if (!ok) return;
+      (async () => {
+        setIsClearing(true);
+        try {
+          await clearAllData();
+          await deleteAllImages();
+          await reloadData();
+          window.alert('Sucesso: Todos os dados e imagens foram apagados.');
+        } catch (err) {
+          console.error('Erro ao limpar dados:', err);
+          window.alert('Erro ao apagar dados. Veja o console para detalhes.');
+        } finally {
+          setIsClearing(false);
+        }
+      })();
+      return;
+    }
+
     Alert.alert(
       'Confirmar Ação',
-      'Você tem certeza que deseja apagar todos os dados? Esta ação não pode ser desfeita.',
+      message,
       [
         {
           text: 'Cancelar',
@@ -48,10 +72,18 @@ export const SettingsScreen: React.FC = () => {
           text: 'Apagar',
           style: 'destructive',
           onPress: async () => {
-            await clearAllData();
-            await deleteAllImages();
-            await reloadData();
-            Alert.alert('Sucesso', 'Todos os dados e imagens foram apagados.');
+            setIsClearing(true);
+            try {
+              await clearAllData();
+              await deleteAllImages();
+              await reloadData();
+              Alert.alert('Sucesso', 'Todos os dados e imagens foram apagados.');
+            } catch (err) {
+              console.error('Erro ao limpar dados:', err);
+              Alert.alert('Erro', 'Falha ao apagar dados. Veja o console para detalhes.');
+            } finally {
+              setIsClearing(false);
+            }
           },
         },
       ]
@@ -162,7 +194,7 @@ export const SettingsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
+        <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.sectionTitle}>📊 Resumo Geral</Text>
 
           {/* As a a substitute for the stats object, I will render a placeholder */}
@@ -212,7 +244,8 @@ export const SettingsScreen: React.FC = () => {
 
           <TouchableOpacity
             style={[styles.actionCard, { marginBottom: 16 }]}
-            onPress={() => handleClearData()}
+            onPress={handleClearData}
+            disabled={isClearing || isSyncing}
             activeOpacity={0.8}
           >
             <MaterialCommunityIcons name="trash-can-outline" style={[styles.actionIcon, { color: Colors.error }]} />
@@ -220,7 +253,11 @@ export const SettingsScreen: React.FC = () => {
               <Text style={styles.actionLabel}>Limpar Dados</Text>
               <Text style={styles.actionSublabel}>Apaga todos os registros de tatuagens e clientes</Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" style={styles.actionChevron} />
+            {isClearing ? (
+              <ActivityIndicator style={styles.actionChevron} color={Colors.error} />
+            ) : (
+              <MaterialCommunityIcons name="chevron-right" style={styles.actionChevron} />
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -296,7 +333,7 @@ export const SettingsScreen: React.FC = () => {
           <Text style={styles.footerText}>
             Desenvolvido com ❤️ para tatuadores profissionais
           </Text>
-        </View>
+        </ScrollView>
     </SafeAreaView>
   );
 };
